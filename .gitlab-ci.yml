@@ -23,9 +23,9 @@ stages:          # List of stages for jobs, and their order of execution
 variables:
   DOTNET_VERSION: "6.0" # Adjust to your required .NET Core version
   AZURE_WEBAPP_NAME: "hackmt-blazorwebapp" # Replace with your Azure Web App name
-  APP_PATH: "publish"
+  APP_PATH: "$CI_PROJECT_DIR/"
   API_TOKEN: $DEPLOYMENT_TOKEN
-  OUTPUT_PATH: 'wwwroot'
+  OUTPUT_PATH: 'publish'
 
 cache:
   paths:
@@ -40,10 +40,10 @@ build:
   stage: build
   image: mcr.microsoft.com/dotnet/sdk:$DOTNET_VERSION
   script:
-    - dotnet publish -c Release -o $APP_PATH
+    - dotnet publish -c Release -o $OUTPUT_PATH
   artifacts:
     paths:
-      - $APP_PATH
+      - $OUTPUT_PATH
     expire_in: 1 week
 
 deploy:
