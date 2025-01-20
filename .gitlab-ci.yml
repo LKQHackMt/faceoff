@@ -3,31 +3,33 @@ stages:
   - deploy
 
 variables:
-  BUILD_CONFIGURATION: "Release"
-  DOTNET_VERSION: "6.0"
-  AZURE_RESOURCE_GROUP: $CI_PROJECT_NAME # Replace with your resource group
-  AZURE_APP_NAME: "your-app-name" # Replace with your App Service name
+  DOTNET_VERSION: "6.0" # Update to your Blazor Server app's .NET version
+  AZURE_APP_NAME: "hackmt-blazorwebapp" # Replace with your Azure Web App name
+  AZURE_REGION: "Central US" # Replace with your Azure region
 
 before_script:
-  - curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION
-  - apt-get update -qq && apt-get install -y unzip
+  # Install .NET Core SDK
+  - apt-get update && apt-get install -y wget apt-transport-https
+  - wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb
+  - dpkg -i packages-microsoft-prod.deb
+  - apt-get update && apt-get install -y dotnet-sdk-$DOTNET_VERSION
+  # Install Azure CLI
+  - curl -sL https://aka.ms/InstallAzureCli | bash -s -- --accept-terms
 
 build:
   stage: build
   script:
+    # Restore dependencies and build the Blazor Server app
     - dotnet restore
-    - dotnet build --configuration $BUILD_CONFIGURATION
-    - dotnet publish --configuration $BUILD_CONFIGURATION --output ./publish
+    - dotnet publish -c Release -o publish
+  artifacts:
+    paths:
+      - publish/
 
 deploy:
   stage: deploy
-  image: ubuntu:latest
-  before_script:
-    - apt-get update && apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
-    - curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-    - install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
-    - sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list'
-    - apt-get update && apt-get install -y azure-cli
   script:
+    # Authenticate with Azure using a Service Principal
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-    - az webapp deployment source config-zip --resource-group $AZURE_RESOURCE_GROUP --name $AZURE_APP_NAME --src ./publish.zip
+    # Deploy the Blazor Server app to Azure Web App
+    - az webapp up --name $AZURE_APP_NAME --resource-group $AZURE_RESOURCE_GROUP --plan $AZURE_APP_NAME-Plan --location $AZURE_REGION --sku F1 --runtime "DOTNET|6.0" --src-path publish/
