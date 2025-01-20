@@ -11,7 +11,7 @@ variables:
 before_script:
   - curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION
   - apt-get update -qq && apt-get install -y unzip
-  - curl -sSL https://aka.ms/InstallAzureCli | bash -s -- --accept-terms
+  - curl -sSL https://aka.ms/InstallAzureCli | bash
 
 build:
   stage: build
