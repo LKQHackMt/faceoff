@@ -8,13 +8,9 @@ variables:
   AZURE_REGION: "Central US" # Replace with your Azure region
 
 before_script:
-  # Install .NET Core SDK
-  - apt-get update && apt-get install -y wget apt-transport-https
-  # Install Azure CLI
-  - curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-  - install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
-  - sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list'
-  - apt-get update && apt-get install -y azure-cli
+  - apt-get update -qq && apt-get install -y unzip
+  - dotnet --version
+  - dotnet restore
 
 build:
   stage: build
@@ -29,6 +25,7 @@ build:
 
 deploy:
   stage: deploy
+  image: mcr.microsoft.com/azure-cli:latest
   script:
     # Authenticate with Azure using a Service Principal
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
