@@ -11,8 +11,6 @@ variables:
 before_script:
   - curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION
   - apt-get update -qq && apt-get install -y unzip
-  - export DEBIAN_FRONTEND=noninteractive
-  - curl -sSL https://aka.ms/InstallAzureCli | bash -s -- --accept-terms
 
 build:
   stage: build
@@ -23,6 +21,13 @@ build:
 
 deploy:
   stage: deploy
+  image: ubuntu:latest
+  before_script:
+    - apt-get update && apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
+    - curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+    - install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
+    - sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list'
+    - apt-get update && apt-get install -y azure-cli
   script:
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     - az webapp deployment source config-zip --resource-group $AZURE_RESOURCE_GROUP --name $AZURE_APP_NAME --src ./publish.zip
