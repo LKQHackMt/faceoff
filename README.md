@@ -14,6 +14,14 @@ Prerequisites:
   - Individual components
     - ML.NET Model Builder
 
+## QR Code
+
+Scan the following QR code to visit the web app:
+
+![QR Code](qr_code_image.png)
+
+[https://hackmt-blazorwebapp-fqgcctfwb3chb5hq.centralus-01.azurewebsites.net](https://hackmt-blazorwebapp-fqgcctfwb3chb5hq.centralus-01.azurewebsites.net/)
+
 ## Test and Deploy
 
 This application is deployed to an Azure Web App.
