@@ -18,7 +18,8 @@ build:
     # Restore dependencies and build the Blazor Server app
     - dotnet restore
     - dotnet publish -c Release -o publish
-    - zip -r publish.zip publish/
+    - cd publish
+    - zip -r ../publish.zip ./*
   artifacts:
     paths:
       - publish.zip
