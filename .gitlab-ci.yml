@@ -5,7 +5,7 @@ stages:
 variables:
   DOTNET_VERSION: "6.0" # Update to your Blazor Server app's .NET version
   AZURE_APP_NAME: "hackmt-blazorwebapp" # Replace with your Azure Web App name
-  AZURE_REGION: "Central US" # Replace with your Azure region
+  AZURE_REGION: "centralus" # Replace with your Azure region
 
 build:
   stage: build
