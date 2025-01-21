@@ -18,9 +18,10 @@ build:
     # Restore dependencies and build the Blazor Server app
     - dotnet restore
     - dotnet publish -c Release -o publish
+    - zip -r publish.zip publish/
   artifacts:
     paths:
-      - publish/
+      - publish.zip
 
 deploy:
   stage: deploy
@@ -29,4 +30,4 @@ deploy:
     # Authenticate with Azure using a Service Principal
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     # Deploy the Blazor Server app to Azure Web App
-    - az webapp deploy --name $AZURE_APP_NAME --resource-group $AZURE_RESOURCE_GROUP --src-path publish/ --type zip
+    - az webapp deploy --name $AZURE_APP_NAME --resource-group $AZURE_RESOURCE_GROUP --src-path publish.zip --type zip
