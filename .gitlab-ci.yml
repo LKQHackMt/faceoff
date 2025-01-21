@@ -11,7 +11,7 @@ build:
   stage: build
   image: mcr.microsoft.com/dotnet/sdk:$DOTNET_VERSION
   before_script:
-  - apt-get update -qq && apt-get install -y unzip
+  - apt-get update -qq && apt-get install -y unzip zip
   - dotnet --version
   - dotnet restore
   script:
