@@ -18,8 +18,7 @@ build:
     # Restore dependencies and build the Blazor Server app
     - dotnet restore
     - dotnet publish -c Release -o publish
-    - cd publish
-    - zip -r ../publish.zip ./*
+    - zip -r publish.zip publish/
   artifacts:
     paths:
       - publish.zip
@@ -32,7 +31,6 @@ deploy:
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     # Deploy the Blazor Server app to Azure Web App
     - az webapp deploy --name $AZURE_APP_NAME --resource-group $AZURE_RESOURCE_GROUP --src-path publish.zip --type zip
-  only:
-  - master  # Trigger the deploy job only on the 'master' branch
-  - release/*  # Trigger deploy on any branch starting with 'release/'
-  when: manual  # Makes this job manual, it requires a user to trigger it from the GitLab UI
+  environment:
+    name: production  # Tying this job to the production environment in GitLab
+    url: https://hackmt-blazorwebapp-fqgcctfwb3chb5hq.centralus-01.azurewebsites.net/
