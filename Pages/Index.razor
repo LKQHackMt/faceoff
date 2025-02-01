@@ -1,5 +1,28 @@
 ﻿@page "/"
 
+
+@inject faceoff.Core.FaceOffService FaceOffService
+
+<h3>FaceOffCore Integration</h3>
+
+<button @onclick="AnalyzeImage">Analyze Image</button>
+
+<p>@result</p>
+
+@code {
+    private string result = "Waiting for analysis...";
+
+    private void AnalyzeImage()
+    {
+
+        byte[] dummyData = new byte[] { 0x01, 0x02, 0x03 }; 
+        FaceOffService.CameraImageFeed(dummyData);
+        result = "Analysis started!";
+    }
+}
+
+
+
 @inject ImageHandler IH
 <div id="container">
     <CameraStreamer @ref=CameraStreamerReference
@@ -87,7 +110,7 @@
 
         // Converts base64 string to byteArray
         byte[] byteArray =  (System.Convert.FromBase64String(data));
-
+        FaceOffService.CameraImageFeed(byteArray);
         // Proof of storing byte array
         //IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
 
@@ -101,8 +124,8 @@
         // TESTING ONLY... DELETE LATER
         imageData = await CameraStreamerReference.GetCurrentFrameAsync();
         var rand = new Random();
-        var x = rand.Next(200, 280);
-        var y = rand.Next(120, 150);
+        var x = (720); // Center horizontally
+        var y = (360); // Center vertically
         TrackImage(x, y, 100, 200);
         var mood = rand.Next(0, 4);
         TrackMood((EmotionType)mood);

@@ -20,11 +20,10 @@
 
   <ItemGroup>
     <PackageReference Include="BlazorCameraStreamer" Version="3.0.1" />
+    <PackageReference Include="FaceONNX" Version="4.0.4.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="faceoff.Core\faceoff.Core.csproj" />
-  </ItemGroup>
+
 
   <ItemGroup>
     <Content Update="wwwroot\favicon.ico">

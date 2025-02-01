@@ -3,7 +3,7 @@ using faceoff.Core;
 namespace faceoff
 {
     public class Startup
-    {
+    {   
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -17,7 +17,7 @@ namespace faceoff
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<ImageHandler>();
-            services.AddSingleton<FaceOffCore>();
+            services.AddSingleton<FaceOffService>();
             services.AddServerSideBlazor()
                 .AddHubOptions(o => o.MaximumReceiveMessageSize = 100_000_000);
         }
