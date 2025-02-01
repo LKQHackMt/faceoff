@@ -1,4 +1,7 @@
-﻿namespace faceoff.Core
+﻿using Azure;
+using Azure.AI.Vision.Face;
+
+namespace faceoff.Core
 {
 
     public class FaceOffCore
@@ -10,7 +13,7 @@
 
         }
 
-        public void CameraImageFeed(byte[] imageDataArray)
+        public void ProcessImageData(byte[] imageDataArray)
         {
             //aggregate the face and emotion data
             //if face is detected, call FaceDetectionModel
@@ -26,7 +29,6 @@
         private void EmotionRecognition(byte[] imageDataArray)
         {
             //confidence level threshold
-
             //return emotion;
         }
 

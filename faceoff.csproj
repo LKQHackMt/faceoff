@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.AI.Vision.Face" Version="1.0.0-beta.2" />
     <PackageReference Include="BlazorCameraStreamer" Version="3.0.1" />
   </ItemGroup>
 
