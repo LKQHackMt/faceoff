@@ -74,8 +74,15 @@
     private void OnFrameHandler(string data)
     {
         ++frameCount;
+        
+        // Removes commas from string 
+        data = data[(data.IndexOf(',') + 1)..];
+
+        // Converts base64 string to byteArray
         byte[] byteArray =  (System.Convert.FromBase64String(data));
-        IH.SaveBinary(byteArray, "C://XboxGames");
+
+        // Proof of storing byte array
+        IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
     }
 
     private async void GetCurrentFrame()
