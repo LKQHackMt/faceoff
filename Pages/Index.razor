@@ -1,15 +1,17 @@
 ﻿@page "/"
 
-<p>FrameCount: @frameCount</p>
-
-<CameraStreamer @ref=CameraStreamerReference
+<div id="container">
+    <CameraStreamer @ref=CameraStreamerReference
                 Width=1920
                 Height=1080
                 OnRendered=OnRenderedHandler
                 OnFrame=OnFrameHandler
-                Style="width: 480px; height: 270px;"
+                Style="width: 100%; height: 100%;"
                 CameraID=@cameraId
                 Autostart />
+    <div id="frame" style=@trackingStyle/>
+ </div>
+ <div id="mood">Happy</div>
 
 <div>
     <button @onclick=Start>
@@ -26,14 +28,8 @@
 
 <br />
 
-@if (!string.IsNullOrEmpty(imageData))
-{
-    <img src=@imageData
-         style="width: 480px; height: 270px;" />
-}
-
 @code
-{
+ {
     private CameraStreamer CameraStreamerReference;
 
     private string cameraId = null;
@@ -41,6 +37,8 @@
     private int frameCount;
 
     private string imageData;
+
+    private string trackingStyle = "";
 
     private async void OnRenderedHandler()
     {
@@ -76,5 +74,20 @@
     private async void GetCurrentFrame()
     {
         imageData = await CameraStreamerReference.GetCurrentFrameAsync();
+        var rand = new Random();
+        var x = rand.Next(200, 280);
+        var y = rand.Next(120, 150);
+        TrackImage(x, y, 100, 200);
+        ChangeColor("red");
+    }
+
+    private void TrackImage(int x, int y, int width, int height)
+    {
+        trackingStyle = trackingStyle.ToTrackingStyle(x, y, width, height);
+    }
+
+    private void ChangeColor(string color)
+    {
+        trackingStyle = trackingStyle.ToColorStyle(color);
     }
 }
