@@ -1,5 +1,5 @@
 ﻿using faceoff.Data;
-
+using faceoff.Core;
 namespace faceoff
 {
     public class Startup
@@ -17,6 +17,7 @@ namespace faceoff
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<ImageHandler>();
+            services.AddSingleton<FaceOffCore>();
             services.AddServerSideBlazor()
                 .AddHubOptions(o => o.MaximumReceiveMessageSize = 100_000_000);
         }
