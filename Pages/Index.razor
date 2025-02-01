@@ -1,18 +1,12 @@
 ﻿@page "/"
 
 @inject ImageHandler IH
-<<<<<<< HEAD
 @inject BoxHandler BH
 
-<CameraStreamer @ref=CameraStreamerReference
-                Width=1920
-                Height=1080
-=======
 <div id="container">
     <CameraStreamer @ref=CameraStreamerReference
                 Width=640
                 Height=360
->>>>>>> 269700f66cffc932c4a32848465db86147ac28a0
                 OnRendered=OnRenderedHandler
                 OnFrame=OnFrameHandler
                 Style="width: 100%; height: 100%;"
@@ -92,17 +86,18 @@
         byte[] byteArray =  (System.Convert.FromBase64String(data));
 
         // Proof of storing byte array
-<<<<<<< HEAD
-        IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
-        @* BH.Box box = BH.GetBoxData; *@
-        Console.WriteLine(BH.GetBoxData().X);
-=======
         //IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
 
         //TODO: return x and y (middle of face) and width and height of face
+
+        var box = BH.GetBoxData();
+        @* Console.WriteLine(BH.GetBoxData()); *@
+
         // Call TrackImage
+        TrackImage(box.X, box.Y, box.width, box.height);
+
         // Call TrackMood
->>>>>>> 269700f66cffc932c4a32848465db86147ac28a0
+        TrackMood(box.emotion);
     }
 
     private async void GetCurrentFrame()
