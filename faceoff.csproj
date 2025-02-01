@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+  </PropertyGroup>
+  
   <ItemGroup>
     <Compile Remove="Shared\**" />
     <Content Remove="Shared\**" />
@@ -15,6 +20,10 @@
 
   <ItemGroup>
     <PackageReference Include="BlazorCameraStreamer" Version="3.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="faceoff.Core\faceoff.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
