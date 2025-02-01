@@ -10,21 +10,24 @@
                 Style="width: 100%; height: 100%;"
                 CameraID=@cameraId
                 Autostart />
-    <div id="frame" style=@trackingStyle/>
+    <div id="frame" style=@trackingStyle>
+        <div id="frame-content" style="@colorStyle"/>
+        <div class="text-below" style="color: @htmlColor">@moodText</div>
+    </div>
  </div>
  <div id="bottom-container">
      <div id="mood">@moodText</div>
-@*      <div>
-         <button @onclick=Start>
+     <div>
+@*          <button @onclick=Start>
              Start
          </button>
          <button @onclick=Stop>
              Stop
-         </button>
+         </button> *@
          <button @onclick=GetCurrentFrame>
              Get Current Frame
          </button>
-     </div> *@
+     </div>
  </div>
 
 
@@ -44,11 +47,13 @@
 
     private string imageData;
 
-    private string trackingStyle = "";
+    private string trackingStyle = "display: none;";
 
     private string moodText = "Neutral";
 
     private string htmlColor = "grey";
+
+    private string colorStyle = "";
 
     private async void OnRenderedHandler()
     {
@@ -99,7 +104,8 @@
         var x = rand.Next(200, 280);
         var y = rand.Next(120, 150);
         TrackImage(x, y, 100, 200);
-        TrackMood(EmotionType.Angry);
+        var mood = rand.Next(0, 4);
+        TrackMood((EmotionType)mood);
     }
 
     private void TrackImage(int x, int y, int width, int height)
@@ -112,22 +118,22 @@
         switch (emotion)
         {
             case EmotionType.Happy:
-                trackingStyle = trackingStyle.ToColorStyle("green");
+                colorStyle = colorStyle.ToColorStyle("green");
                 moodText = "Happy";
                 htmlColor = "green";
                 break;
             case EmotionType.Sad:
-                trackingStyle = trackingStyle.ToColorStyle("aqua");
+                colorStyle = colorStyle.ToColorStyle("aqua");
                 moodText = "Sad";
                 htmlColor = "aqua";
                 break;
             case EmotionType.Angry:
-                trackingStyle = trackingStyle.ToColorStyle("red");
+                colorStyle = colorStyle.ToColorStyle("red");
                 moodText = "Angry";
                 htmlColor = "red";
                 break;
             default:
-                trackingStyle = trackingStyle.ToColorStyle("grey");
+                colorStyle = colorStyle.ToColorStyle("grey");
                 moodText = "Neutral";
                 htmlColor = "grey";
                 break;
