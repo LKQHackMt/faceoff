@@ -1,5 +1,6 @@
 ﻿@page "/"
 
+@inject ImageHandler IH
 <div id="container">
     <CameraStreamer @ref=CameraStreamerReference
                 Width=640
@@ -74,13 +75,25 @@
         await CameraStreamerReference.StopAsync();
     }
 
-    private void OnFrameHandler(string _)
-    {
+    private void OnFrameHandler(string data)
+    {       
+        // Removes commas from string 
+        data = data[(data.IndexOf(',') + 1)..];
 
+        // Converts base64 string to byteArray
+        byte[] byteArray =  (System.Convert.FromBase64String(data));
+
+        // Proof of storing byte array
+        //IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
+
+        //TODO: return x and y (middle of face) and width and height of face
+        // Call TrackImage
+        // Call TrackMood
     }
 
     private async void GetCurrentFrame()
     {
+        // TESTING ONLY... DELETE LATER
         imageData = await CameraStreamerReference.GetCurrentFrameAsync();
         var rand = new Random();
         var x = rand.Next(200, 280);
@@ -120,4 +133,7 @@
                 break;
         }
     }
+
+
+
 }
