@@ -81,11 +81,20 @@ a, .btn-link {
     position: absolute;
 }
 
+#bottom-container {
+    height: 10vh;
+}
+
 #mood {
     text-align: center;
-    font-family: fantasy;
     font-size: 8vh;
+    font-family: "Afacad Flux", serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "slnt" 0;
 }
+
 
 video {
     z-index: 0;

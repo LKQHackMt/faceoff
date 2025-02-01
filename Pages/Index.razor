@@ -12,19 +12,21 @@
                 Autostart />
     <div id="frame" style=@trackingStyle/>
  </div>
- <div id="mood">@moodText</div>
+ <div id="bottom-container">
+     <div id="mood">@moodText</div>
+@*      <div>
+         <button @onclick=Start>
+             Start
+         </button>
+         <button @onclick=Stop>
+             Stop
+         </button>
+         <button @onclick=GetCurrentFrame>
+             Get Current Frame
+         </button>
+     </div> *@
+ </div>
 
-<div>
-    <button @onclick=Start>
-        Start
-    </button>
-    <button @onclick=Stop>
-        Stop
-    </button>
-     <button @onclick=GetCurrentFrame>
-         Get Current Frame
-     </button>
-</div>
 
 <br />
 
