@@ -1,6 +1,8 @@
 ﻿@page "/"
 
 @inject ImageHandler IH
+@inject BoxHandler BH
+
 <div id="container">
     <CameraStreamer @ref=CameraStreamerReference
                 Width=640
@@ -92,8 +94,15 @@
         //IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
 
         //TODO: return x and y (middle of face) and width and height of face
+
+        var box = BH.GetBoxData();
+        @* Console.WriteLine(BH.GetBoxData()); *@
+
         // Call TrackImage
+        TrackImage(box.X, box.Y, box.width, box.height);
+
         // Call TrackMood
+        TrackMood(box.emotion);
     }
 
     private async void GetCurrentFrame()
