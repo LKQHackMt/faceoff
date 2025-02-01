@@ -4,6 +4,7 @@
 
 @using faceoff.Data
 @inject ImageHandler IH
+@inject BoxHandler BH
 
 <CameraStreamer @ref=CameraStreamerReference
                 Width=1920
@@ -83,6 +84,8 @@
 
         // Proof of storing byte array
         IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
+        @* BH.Box box = BH.GetBoxData; *@
+        Console.WriteLine(BH.GetBoxData().X);
     }
 
     private async void GetCurrentFrame()
