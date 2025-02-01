@@ -2,6 +2,7 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100vh;
 }
 
 h1:focus {
@@ -87,7 +88,7 @@ a, .btn-link {
 
 #mood {
     text-align: center;
-    font-size: 8vh;
+    font-size: 6vh;
     font-family: "Afacad Flux", serif;
     font-optical-sizing: auto;
     font-weight: 400;
