@@ -2,6 +2,9 @@
 
 <p>FrameCount: @frameCount</p>
 
+@using faceoff.Data
+@inject ImageHandler IH
+
 <CameraStreamer @ref=CameraStreamerReference
                 Width=1920
                 Height=1080
@@ -68,13 +71,18 @@
         await CameraStreamerReference.StopAsync();
     }
 
-    private void OnFrameHandler(string _)
+    private void OnFrameHandler(string data)
     {
         ++frameCount;
+        byte[] byteArray =  (System.Convert.FromBase64String(data));
+        IH.SaveBinary(byteArray, "C://XboxGames");
     }
 
     private async void GetCurrentFrame()
     {
         imageData = await CameraStreamerReference.GetCurrentFrameAsync();
     }
+
+
+
 }
