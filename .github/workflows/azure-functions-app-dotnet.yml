@@ -26,7 +26,7 @@ env:
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "release/*" ]
   workflow_dispatch:
 
 permissions:
