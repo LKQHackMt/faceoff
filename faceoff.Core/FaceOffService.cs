@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.AI.Vision.Face;
 using Microsoft.Extensions.Configuration;
+using System.Drawing;
 using System.Net;
 
 namespace faceoff.Core
@@ -39,7 +40,26 @@ namespace faceoff.Core
 
             client = Authenticate(_subscriptionKey, _endpoint);
         }
+        public void CameraImageFeed(Bitmap imageDataArray)
+        {
+            //aggregate the face and emotion data
+            //if face is detected, call FaceDetectionModel
+            //then call EmotionRecognition
+            //else 
+            var currImageData = imageDataArray;
+            if (currImageData != null)
+            {
+                Console.WriteLine("Image data received");
+                FaceDetectionAzure(currImageData);
+                //EmotionRecognition(currImageData);
+            }
+            else
+            {
+                Console.WriteLine("Image data not received");
 
+                return;
+            }
+        }
         public void ProcessImageData(byte[] imageDataArray)
         {
             //aggregate the face and emotion data
@@ -47,11 +67,14 @@ namespace faceoff.Core
             //then call EmotionRecognition
             //else 
         }
-
-        private void FaceDetection(byte[] imageDataArray)
+        public class ImageInputData
         {
-            var ImageBaseUrl = imageDataArray;
-            //IdentifyInLargePersonGroup(client, ImageBaseUrl, RecognitionModel4).Wait();
+            public Bitmap Image { get; set; }
+        }
+        private void FaceDetectionAzure(Bitmap imageDataArray)
+        {
+            var ImageData = imageDataArray;
+            IdentifyInLargePersonGroup(client, ImageData, RecognitionModel4,_subscriptionKey).Wait();
 
             //return face coordinates
             //240x320
@@ -82,7 +105,7 @@ namespace faceoff.Core
         private static async Task<List<FaceDetectionResult>> DetectFaceRecognize(FaceClient faceClient, string url, FaceRecognitionModel recognitionModel)
         {
             // Detect faces from image URL.
-            var response = await faceClient.DetectAsync(new Uri(url), FaceDetectionModel.Detection03, recognitionModel, true, [FaceAttributeType.QualityForRecognition]);
+            var response = await faceClient.DetectAsync(new Uri(url), FaceDetectionModel.Detection03, recognitionModel, true, new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition});
             IReadOnlyList<FaceDetectionResult> detectedFaces = response.Value;
             List<FaceDetectionResult> sufficientQualityFaces = new List<FaceDetectionResult>();
             foreach (FaceDetectionResult detectedFace in detectedFaces)
@@ -105,7 +128,7 @@ namespace faceoff.Core
          * a list of Person objects that each face might belong to. Returned Person objects are wrapped as Candidate objects, 
          * which have a prediction confidence value.
          */
-        public static async Task IdentifyInLargePersonGroup(FaceClient client, string url, FaceRecognitionModel recognitionModel)
+        public static async Task IdentifyInLargePersonGroup(FaceClient client, Bitmap imageData, FaceRecognitionModel recognitionModel, string apikey)
         {
             Console.WriteLine("========IDENTIFY FACES========");
             Console.WriteLine();
@@ -122,7 +145,7 @@ namespace faceoff.Core
 
             // Create a large person group.
             Console.WriteLine($"Create a person group ({LargePersonGroupId}).");
-            //LargePersonGroupClient largePersonGroupClient = new FaceAdministrationClient(new Uri(), new AzureKeyCredential(_subscriptionKey)).GetLargePersonGroupClient(LargePersonGroupId);
+            LargePersonGroupClient largePersonGroupClient = new FaceAdministrationClient(new Uri(imageData), new AzureKeyCredential(apikey)).GetLargePersonGroupClient(LargePersonGroupId);
             //await largePersonGroupClient.CreateAsync(LargePersonGroupId, recognitionModel: recognitionModel);
             // The similar faces will be grouped into a single large person group person.
             foreach (string groupedFace in personDictionary.Keys)
@@ -137,7 +160,7 @@ namespace faceoff.Core
                 foreach (string similarImage in personDictionary[groupedFace])
                 {
                     Console.WriteLine($"Check whether image is of sufficient quality for recognition");
-                    var detectResponse = await client.DetectAsync(new Uri($"{url}{similarImage}"), FaceDetectionModel.Detection03, recognitionModel, false, [FaceAttributeType.QualityForRecognition]);
+                    var detectResponse = await client.DetectAsync(new Uri($"{url}{similarImage}"), FaceDetectionModel.Detection03, recognitionModel, false, new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition });
                     IReadOnlyList<FaceDetectionResult> facesInImage = detectResponse.Value;
                     bool sufficientQuality = true;
                     foreach (FaceDetectionResult face in facesInImage)
