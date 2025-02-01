@@ -59,6 +59,34 @@ a, .btn-link {
     color: white;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
+
+#container {
+    width: 100%;
+    height: 90vh;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    outline: 2px solid black;
+    background-image: url("/images/faceoffBackground.JPG")
+}
+
+
+#frame {
+    background: transparent;
+    outline: 2px solid;
+    z-index: 10;
+    position: absolute;
+}
+
+#mood {
+    text-align: center;
+    font-family: fantasy;
+    font-size: 8vh;
+}
+
+video {
+    z-index: 0;
+}
