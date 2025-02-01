@@ -21,10 +21,16 @@
   <ItemGroup>
     <PackageReference Include="Azure.AI.Vision.Face" Version="1.0.0-beta.2" />
     <PackageReference Include="BlazorCameraStreamer" Version="3.0.1" />
+    <PackageReference Include="faceoffservice" Version="1.0.0" />
   </ItemGroup>
 
+
   <ItemGroup>
-    <ProjectReference Include="faceoff.Core\faceoff.Core.csproj" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -34,6 +40,13 @@
     <Content Update="wwwroot\images\faceoffBackground.JPG">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
