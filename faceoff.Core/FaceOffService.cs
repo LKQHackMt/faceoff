@@ -1,8 +1,10 @@
 ﻿using Azure;
 using Azure.AI.Vision.Face;
 using Microsoft.Extensions.Configuration;
+using System.Collections;
 using System.Drawing;
 using System.Net;
+using SkyBiometry;
 
 namespace faceoff.Core
 {
@@ -38,9 +40,9 @@ namespace faceoff.Core
             _subscriptionKey = _configuration["SubscriptionKey"];
             _endpoint = _configuration["Endpoint"];
 
-            client = Authenticate(_subscriptionKey, _endpoint);
+            client = Authenticate(_endpoint,_subscriptionKey);
         }
-        public void CameraImageFeed(Bitmap imageDataArray)
+        public void CameraImageFeed(byte[] imageDataArray)
         {
             //aggregate the face and emotion data
             //if face is detected, call FaceDetectionModel
@@ -67,14 +69,18 @@ namespace faceoff.Core
             //then call EmotionRecognition
             //else 
         }
-        public class ImageInputData
+  
+        private void FaceDetectionAzure(byte[] imageDataArray)
         {
-            public Bitmap Image { get; set; }
-        }
-        private void FaceDetectionAzure(Bitmap imageDataArray)
-        {
-            var ImageData = imageDataArray;
-            IdentifyInLargePersonGroup(client, ImageData, RecognitionModel4,_subscriptionKey).Wait();
+            try {
+                //DetectFaceRecognize(client, imageDataArray, RecognitionModel4);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+               
+            }
+            //IdentifyInLargePersonGroup(client, ImageData, RecognitionModel4,_subscriptionKey).Wait();
 
             //return face coordinates
             //240x320
@@ -102,24 +108,24 @@ namespace faceoff.Core
         // Result faces with insufficient quality for recognition are filtered out. 
         // The field `faceId` in returned `DetectedFace`s will be used in Verify and Identify.
         // It will expire 24 hours after the detection call.
-        private static async Task<List<FaceDetectionResult>> DetectFaceRecognize(FaceClient faceClient, string url, FaceRecognitionModel recognitionModel)
-        {
-            // Detect faces from image URL.
-            var response = await faceClient.DetectAsync(new Uri(url), FaceDetectionModel.Detection03, recognitionModel, true, new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition});
-            IReadOnlyList<FaceDetectionResult> detectedFaces = response.Value;
-            List<FaceDetectionResult> sufficientQualityFaces = new List<FaceDetectionResult>();
-            foreach (FaceDetectionResult detectedFace in detectedFaces)
-            {
-                QualityForRecognition? faceQualityForRecognition = detectedFace.FaceAttributes.QualityForRecognition;
-                if (faceQualityForRecognition.HasValue && (faceQualityForRecognition.Value != QualityForRecognition.Low))
-                {
-                    sufficientQualityFaces.Add(detectedFace);
-                }
-            }
-            Console.WriteLine($"{detectedFaces.Count} face(s) with {sufficientQualityFaces.Count} having sufficient quality for recognition detected from image `{Path.GetFileName(url)}`");
+        //private static async Task<List<FaceDetectionResult>> DetectFaceRecognize(FaceClient faceClient, byte[] imageData, FaceRecognitionModel recognitionModel)
+        //{
+        //    // Detect faces from image URL.
+        //    var response = await faceClient.DetectAsync(new BinaryData(imageData), FaceDetectionModel.Detection03, recognitionModel, true, new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition});
+        //    IReadOnlyList<FaceDetectionResult> detectedFaces = response.Value;
+        //    List<FaceDetectionResult> sufficientQualityFaces = new List<FaceDetectionResult>();
+        //    foreach (FaceDetectionResult detectedFace in detectedFaces)
+        //    {
+        //        QualityForRecognition? faceQualityForRecognition = detectedFace.FaceAttributes.QualityForRecognition;
+        //        if (faceQualityForRecognition.HasValue && (faceQualityForRecognition.Value != QualityForRecognition.Low))
+        //        {
+        //            sufficientQualityFaces.Add(detectedFace);
+        //        }
+        //    }
+        //    Console.WriteLine($"{detectedFaces.Count} face(s) with {sufficientQualityFaces.Count} having sufficient quality for recognition detected from image");
 
-            return sufficientQualityFaces;
-        }
+        //    return sufficientQualityFaces;
+        //}
 
         /*
          * IDENTIFY FACES
@@ -128,117 +134,117 @@ namespace faceoff.Core
          * a list of Person objects that each face might belong to. Returned Person objects are wrapped as Candidate objects, 
          * which have a prediction confidence value.
          */
-        public static async Task IdentifyInLargePersonGroup(FaceClient client, Bitmap imageData, FaceRecognitionModel recognitionModel, string apikey)
-        {
-            Console.WriteLine("========IDENTIFY FACES========");
-            Console.WriteLine();
+        //public static async Task IdentifyInLargePersonGroup(FaceClient client, Bitmap imageData, FaceRecognitionModel recognitionModel, string apikey)
+        //{
+        //    Console.WriteLine("========IDENTIFY FACES========");
+        //    Console.WriteLine();
 
-            // Create a dictionary for all your images, grouping similar ones under the same key.
-            Dictionary<string, string[]> personDictionary =
-                new Dictionary<string, string[]>
-                    { { "Family1-Dad", new[] { "Family1-Dad1.jpg", "Family1-Dad2.jpg" } },
-                      { "Family1-Mom", new[] { "Family1-Mom1.jpg", "Family1-Mom2.jpg" } },
-                      { "Family1-Son", new[] { "Family1-Son1.jpg", "Family1-Son2.jpg" } }
-                    };
-            // A group photo that includes some of the persons you seek to identify from your dictionary.
-            string sourceImageFileName = "identification1.jpg";
+        //    Create a dictionary for all your images, grouping similar ones under the same key.
+        //   Dictionary<string, string[]> personDictionary =
+        //       new Dictionary<string, string[]>
+        //           { { "Family1-Dad", new[] { "Family1-Dad1.jpg", "Family1-Dad2.jpg" } },
+        //              { "Family1-Mom", new[] { "Family1-Mom1.jpg", "Family1-Mom2.jpg" } },
+        //              { "Family1-Son", new[] { "Family1-Son1.jpg", "Family1-Son2.jpg" } }
+        //           };
+        //    A group photo that includes some of the persons you seek to identify from your dictionary.
+        //    string sourceImageFileName = "identification1.jpg";
 
-            // Create a large person group.
-            Console.WriteLine($"Create a person group ({LargePersonGroupId}).");
-            LargePersonGroupClient largePersonGroupClient = new FaceAdministrationClient(new Uri(imageData), new AzureKeyCredential(apikey)).GetLargePersonGroupClient(LargePersonGroupId);
-            //await largePersonGroupClient.CreateAsync(LargePersonGroupId, recognitionModel: recognitionModel);
-            // The similar faces will be grouped into a single large person group person.
-            foreach (string groupedFace in personDictionary.Keys)
-            {
-                // Limit TPS
-                await Task.Delay(250);
-                var createPersonResponse = await largePersonGroupClient.CreatePersonAsync(groupedFace);
-                Guid personId = createPersonResponse.Value.PersonId;
-                Console.WriteLine($"Create a person group person '{groupedFace}'.");
+        //    Create a large person group.
+        //   Console.WriteLine($"Create a person group ({LargePersonGroupId}).");
+        //    LargePersonGroupClient largePersonGroupClient = new FaceAdministrationClient(new Uri(imageData), new AzureKeyCredential(apikey)).GetLargePersonGroupClient(LargePersonGroupId);
+        //    await largePersonGroupClient.CreateAsync(LargePersonGroupId, recognitionModel: recognitionModel);
+        //    The similar faces will be grouped into a single large person group person.
+        //    foreach (string groupedFace in personDictionary.Keys)
+        //    {
+        //        Limit TPS
+        //        await Task.Delay(250);
+        //        var createPersonResponse = await largePersonGroupClient.CreatePersonAsync(groupedFace);
+        //        Guid personId = createPersonResponse.Value.PersonId;
+        //        Console.WriteLine($"Create a person group person '{groupedFace}'.");
 
-                // Add face to the large person group person.
-                foreach (string similarImage in personDictionary[groupedFace])
-                {
-                    Console.WriteLine($"Check whether image is of sufficient quality for recognition");
-                    var detectResponse = await client.DetectAsync(new Uri($"{url}{similarImage}"), FaceDetectionModel.Detection03, recognitionModel, false, new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition });
-                    IReadOnlyList<FaceDetectionResult> facesInImage = detectResponse.Value;
-                    bool sufficientQuality = true;
-                    foreach (FaceDetectionResult face in facesInImage)
-                    {
-                        QualityForRecognition? faceQualityForRecognition = face.FaceAttributes.QualityForRecognition;
-                        //  Only "high" quality images are recommended for person enrollment
-                        if (faceQualityForRecognition.HasValue && (faceQualityForRecognition.Value != QualityForRecognition.High))
-                        {
-                            sufficientQuality = false;
-                            break;
-                        }
-                    }
+        //        Add face to the large person group person.
+        //        foreach (string similarImage in personDictionary[groupedFace])
+        //        {
+        //            Console.WriteLine($"Check whether image is of sufficient quality for recognition");
+        //            var detectResponse = await client.DetectAsync(new Uri($"{url}{similarImage}"), FaceDetectionModel.Detection03, recognitionModel, false, new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition });
+        //            IReadOnlyList<FaceDetectionResult> facesInImage = detectResponse.Value;
+        //            bool sufficientQuality = true;
+        //            foreach (FaceDetectionResult face in facesInImage)
+        //            {
+        //                QualityForRecognition? faceQualityForRecognition = face.FaceAttributes.QualityForRecognition;
+        //                Only "high" quality images are recommended for person enrollment
+        //                if (faceQualityForRecognition.HasValue && (faceQualityForRecognition.Value != QualityForRecognition.High))
+        //                    {
+        //                        sufficientQuality = false;
+        //                        break;
+        //                    }
+        //            }
 
-                    if (!sufficientQuality)
-                    {
-                        continue;
-                    }
+        //            if (!sufficientQuality)
+        //            {
+        //                continue;
+        //            }
 
-                    if (facesInImage.Count != 1)
-                    {
-                        continue;
-                    }
+        //            if (facesInImage.Count != 1)
+        //            {
+        //                continue;
+        //            }
 
-                    // add face to the large person group
-                    Console.WriteLine($"Add face to the person group person({groupedFace}) from image `{similarImage}`");
-                    await largePersonGroupClient.AddFaceAsync(personId, new Uri($"{url}{similarImage}"), detectionModel: FaceDetectionModel.Detection03);
-                }
-            }
+        //            add face to the large person group
+        //            Console.WriteLine($"Add face to the person group person({groupedFace}) from image `{similarImage}`");
+        //            await largePersonGroupClient.AddFaceAsync(personId, new Uri($"{url}{similarImage}"), detectionModel: FaceDetectionModel.Detection03);
+        //        }
+        //    }
 
-            // Start to train the large person group.
-            Console.WriteLine();
-            Console.WriteLine($"Train person group {LargePersonGroupId}.");
-            Operation operation = await largePersonGroupClient.TrainAsync(WaitUntil.Completed);
+        //    Start to train the large person group.
+        //   Console.WriteLine();
+        //    Console.WriteLine($"Train person group {LargePersonGroupId}.");
+        //    Operation operation = await largePersonGroupClient.TrainAsync(WaitUntil.Completed);
 
-            // Wait until the training is completed.
-            await operation.WaitForCompletionResponseAsync();
-            Console.WriteLine("Training status: succeeded.");
-            Console.WriteLine();
+        //    Wait until the training is completed.
+        //   await operation.WaitForCompletionResponseAsync();
+        //    Console.WriteLine("Training status: succeeded.");
+        //    Console.WriteLine();
 
-            Console.WriteLine("Pausing for 60 seconds to avoid triggering rate limit on free account...");
-            await Task.Delay(60000);
+        //    Console.WriteLine("Pausing for 60 seconds to avoid triggering rate limit on free account...");
+        //    await Task.Delay(60000);
 
-            List<Guid> sourceFaceIds = new List<Guid>();
-            // Detect faces from source image url.
-            List<FaceDetectionResult> detectedFaces = await DetectFaceRecognize(client, $"{url}{sourceImageFileName}", recognitionModel);
+        //    List<Guid> sourceFaceIds = new List<Guid>();
+        //    Detect faces from source image url.
+        //   List < FaceDetectionResult > detectedFaces = await DetectFaceRecognize(client, $"{url}{sourceImageFileName}", recognitionModel);
 
-            // Add detected faceId to sourceFaceIds.
-            foreach (FaceDetectionResult detectedFace in detectedFaces) { sourceFaceIds.Add(detectedFace.FaceId.Value); }
+        //    Add detected faceId to sourceFaceIds.
+        //    foreach (FaceDetectionResult detectedFace in detectedFaces) { sourceFaceIds.Add(detectedFace.FaceId.Value); }
 
-            // Identify the faces in a large person group.
-            var identifyResponse = await client.IdentifyFromLargePersonGroupAsync(sourceFaceIds, LargePersonGroupId);
-            IReadOnlyList<FaceIdentificationResult> identifyResults = identifyResponse.Value;
-            foreach (FaceIdentificationResult identifyResult in identifyResults)
-            {
-                if (identifyResult.Candidates.Count == 0)
-                {
-                    Console.WriteLine($"No person is identified for the face in: {sourceImageFileName} - {identifyResult.FaceId},");
-                    continue;
-                }
+        //    Identify the faces in a large person group.
+        //    var identifyResponse = await client.IdentifyFromLargePersonGroupAsync(sourceFaceIds, LargePersonGroupId);
+        //    IReadOnlyList<FaceIdentificationResult> identifyResults = identifyResponse.Value;
+        //    foreach (FaceIdentificationResult identifyResult in identifyResults)
+        //    {
+        //        if (identifyResult.Candidates.Count == 0)
+        //        {
+        //            Console.WriteLine($"No person is identified for the face in: {sourceImageFileName} - {identifyResult.FaceId},");
+        //            continue;
+        //        }
 
-                FaceIdentificationCandidate candidate = identifyResult.Candidates.First();
-                var getPersonResponse = await largePersonGroupClient.GetPersonAsync(candidate.PersonId);
-                string personName = getPersonResponse.Value.Name;
-                Console.WriteLine($"Person '{personName}' is identified for the face in: {sourceImageFileName} - {identifyResult.FaceId}," + $" confidence: {candidate.Confidence}.");
+        //        FaceIdentificationCandidate candidate = identifyResult.Candidates.First();
+        //        var getPersonResponse = await largePersonGroupClient.GetPersonAsync(candidate.PersonId);
+        //        string personName = getPersonResponse.Value.Name;
+        //        Console.WriteLine($"Person '{personName}' is identified for the face in: {sourceImageFileName} - {identifyResult.FaceId}," + $" confidence: {candidate.Confidence}.");
 
-                var verifyResponse = await client.VerifyFromLargePersonGroupAsync(identifyResult.FaceId, LargePersonGroupId, candidate.PersonId);
-                FaceVerificationResult verifyResult = verifyResponse.Value;
-                Console.WriteLine($"Verification result: is a match? {verifyResult.IsIdentical}. confidence: {verifyResult.Confidence}");
-            }
-            Console.WriteLine();
+        //        var verifyResponse = await client.VerifyFromLargePersonGroupAsync(identifyResult.FaceId, LargePersonGroupId, candidate.PersonId);
+        //        FaceVerificationResult verifyResult = verifyResponse.Value;
+        //        Console.WriteLine($"Verification result: is a match? {verifyResult.IsIdentical}. confidence: {verifyResult.Confidence}");
+        //    }
+        //    Console.WriteLine();
 
-            // Delete large person group.
-            Console.WriteLine("========DELETE PERSON GROUP========");
-            Console.WriteLine();
-            await largePersonGroupClient.DeleteAsync();
-            Console.WriteLine($"Deleted the person group {LargePersonGroupId}.");
-            Console.WriteLine();
-        }
+        //    Delete large person group.
+        //    Console.WriteLine("========DELETE PERSON GROUP========");
+        //    Console.WriteLine();
+        //    await largePersonGroupClient.DeleteAsync();
+        //    Console.WriteLine($"Deleted the person group {LargePersonGroupId}.");
+        //    Console.WriteLine();
+        //}
     }
 }
 

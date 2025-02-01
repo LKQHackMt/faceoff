@@ -18,7 +18,7 @@ namespace faceoff
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<ImageHandler>();
-            //services.AddSingleton<FaceOffService>();
+            services.AddSingleton<FaceOffService>();
             services.AddServerSideBlazor()
                 .AddHubOptions(o => o.MaximumReceiveMessageSize = 100_000_000);
         }
