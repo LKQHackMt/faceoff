@@ -65,6 +65,8 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
+    #Specify that the deploy job can be manually triggered
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: none
     runs-on: ubuntu-latest
