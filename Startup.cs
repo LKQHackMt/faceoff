@@ -16,6 +16,9 @@ namespace faceoff
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
+            services.AddSingleton<ImageHandler>();
+            services.AddServerSideBlazor()
+                .AddHubOptions(o => o.MaximumReceiveMessageSize = 100_000_000);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
