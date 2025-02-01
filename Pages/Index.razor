@@ -1,15 +1,17 @@
 ﻿@page "/"
 
-<p>FrameCount: @frameCount</p>
-
-<CameraStreamer @ref=CameraStreamerReference
-                Width=1920
-                Height=1080
+<div id="container">
+    <CameraStreamer @ref=CameraStreamerReference
+                Width=640
+                Height=360
                 OnRendered=OnRenderedHandler
                 OnFrame=OnFrameHandler
-                Style="width: 480px; height: 270px;"
+                Style="width: 100%; height: 100%;"
                 CameraID=@cameraId
                 Autostart />
+    <div id="frame" style=@trackingStyle/>
+ </div>
+ <div id="mood">@moodText</div>
 
 <div>
     <button @onclick=Start>
@@ -18,33 +20,37 @@
     <button @onclick=Stop>
         Stop
     </button>
+     <button @onclick=GetCurrentFrame>
+         Get Current Frame
+     </button>
 </div>
-
-<button @onclick=GetCurrentFrame>
-    Get Current Frame
-</button>
 
 <br />
 
-@if (!string.IsNullOrEmpty(imageData))
-{
-    <img src=@imageData
-         style="width: 480px; height: 270px;" />
-}
+ <style>
+
+     body {
+         background-color: @htmlColor;
+     }
+
+ </style>
 
 @code
-{
+ {
     private CameraStreamer CameraStreamerReference;
 
     private string cameraId = null;
 
-    private int frameCount;
-
     private string imageData;
+
+    private string trackingStyle = "";
+
+    private string moodText = "Neutral";
+
+    private string htmlColor = "grey";
 
     private async void OnRenderedHandler()
     {
-        frameCount = 0;
 
         // Check camera-access or ask user, if it's not allowed currently
         if (await CameraStreamerReference.GetCameraAccessAsync())
@@ -70,11 +76,48 @@
 
     private void OnFrameHandler(string _)
     {
-        ++frameCount;
+
     }
 
     private async void GetCurrentFrame()
     {
         imageData = await CameraStreamerReference.GetCurrentFrameAsync();
+        var rand = new Random();
+        var x = rand.Next(200, 280);
+        var y = rand.Next(120, 150);
+        TrackImage(x, y, 100, 200);
+        TrackMood(EmotionType.Angry);
+    }
+
+    private void TrackImage(int x, int y, int width, int height)
+    {
+        trackingStyle = trackingStyle.ToTrackingStyle(x, y, width, height);
+    }
+
+    private void TrackMood(EmotionType emotion)
+    {
+        switch (emotion)
+        {
+            case EmotionType.Happy:
+                trackingStyle = trackingStyle.ToColorStyle("green");
+                moodText = "Happy";
+                htmlColor = "green";
+                break;
+            case EmotionType.Sad:
+                trackingStyle = trackingStyle.ToColorStyle("aqua");
+                moodText = "Sad";
+                htmlColor = "aqua";
+                break;
+            case EmotionType.Angry:
+                trackingStyle = trackingStyle.ToColorStyle("red");
+                moodText = "Angry";
+                htmlColor = "red";
+                break;
+            default:
+                trackingStyle = trackingStyle.ToColorStyle("grey");
+                moodText = "Neutral";
+                htmlColor = "grey";
+                break;
+        }
     }
 }
