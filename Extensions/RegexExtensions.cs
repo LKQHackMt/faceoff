@@ -17,6 +17,11 @@ namespace faceoff.Extensions
                 trackingStyle = "display: none;";
                 return trackingStyle;
             }
+            
+            if (trackingStyle == "display: none;")
+            {
+                trackingStyle = "";
+            }
             var top = y - (height / 2);
             var left = x - (width / 2);
 
@@ -70,21 +75,29 @@ namespace faceoff.Extensions
             return trackingStyle;
         }
 
-        public static string ToColorStyle(this string trackingStyle, string color)
+        public static string ToColorStyle(this string colorStyle, string color)
         {
             var style = $"outline-color:{color};";
-            
-            var regex = new Regex(colorPattern, RegexOptions.IgnoreCase);
-            if (regex.IsMatch(trackingStyle))
+
+            if (!string.IsNullOrEmpty(colorStyle))
             {
-                trackingStyle = regex.Replace(trackingStyle, style);
+                var regex = new Regex(colorPattern, RegexOptions.IgnoreCase);
+                if (regex.IsMatch(colorStyle))
+                {
+                    colorStyle = regex.Replace(colorStyle, style);
+                }
+                else
+                {
+                    colorStyle += style;
+                }
             }
             else
             {
-                trackingStyle += style;
+                colorStyle = style;
             }
 
-            return trackingStyle;
+
+            return colorStyle;
         }
     }
 }
