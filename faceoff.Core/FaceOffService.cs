@@ -6,7 +6,7 @@ using SixLabors.ImageSharp.Processing;
 
 namespace faceoff.Core
 {
-    public sealed class DetectedFace
+    public class DetectedFace
     {
         public float Confidence { get; set; }
         public float X { get; set; }
@@ -46,7 +46,7 @@ namespace faceoff.Core
             _anchors = GenerateAnchors();
         }
 
-        public void CameraImageFeed(byte[] imageDataArray)
+        public List<DetectedFace> CameraImageFeed(byte[] imageDataArray)
         {
             //aggregate the face and emotion data
             //if face is detected, call FaceDetectionModel
@@ -56,14 +56,14 @@ namespace faceoff.Core
             if (currImageData != null)
             {
                 Console.WriteLine("Image data received");
-                FaceDetectionModel(currImageData);
+                return FaceDetectionModel(currImageData);
                 //EmotionRecognition(currImageData);
             }
             else
             {
                 Console.WriteLine("Image data not received");
 
-                return;
+                return new List<DetectedFace>();
             }
         }
 
@@ -76,7 +76,7 @@ namespace faceoff.Core
             
             foreach (var face in detectedFaces)
             {
-                Console.WriteLine($"Detected face at ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
+                // Console.WriteLine($"Detected face at ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
             }return detectedFaces;
 
             // // dummy face coordinates

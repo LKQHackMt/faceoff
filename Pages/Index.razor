@@ -1,4 +1,6 @@
-﻿@page "/"
+﻿@using faceoff.Core
+
+@page "/"
 
 
 @inject faceoff.Core.FaceOffService FaceOffService
@@ -110,9 +112,13 @@
 
         // Converts base64 string to byteArray
         byte[] byteArray =  (System.Convert.FromBase64String(data));
-        FaceOffService.CameraImageFeed(byteArray);
-        // Proof of storing byte array
-        //IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
+
+        List<DetectedFace> faces = FaceOffService.CameraImageFeed(byteArray);
+
+        foreach (var face in faces)
+            {
+                Console.WriteLine($"FACES FOUND AT ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
+            }
 
         //TODO: return x and y (middle of face) and width and height of face
         // Call TrackImage
