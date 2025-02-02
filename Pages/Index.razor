@@ -23,7 +23,9 @@
     @foreach (var place in trackingStyles)
     {
         Console.WriteLine(place);
-        <div class="frame" style="@place"></div>
+        <div class="frame" style="@place">
+            <div style="position:absolute;top:-30px;">@moodText</div>
+        </div>
     }
  </div>
  <div id="bottom-container">
@@ -154,7 +156,7 @@
                 break;
             case EmotionType.Sad:
                 colorStyle = colorStyle.ToColorStyle("aqua");
-                moodText = "Sad";
+                moodText = "Sad 😔";
                 htmlColor = "aqua";
                 break;
             case EmotionType.Angry:
