@@ -1,9 +1,9 @@
 ﻿using faceoff.Data;
-
+using faceoff.Core;
 namespace faceoff
 {
     public class Startup
-    {
+    {   
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -15,8 +15,9 @@ namespace faceoff
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<ImageHandler>();
+            services.AddSingleton<FaceOffService>(sp => new FaceOffService("version-RFB-320.onnx"));
+
             services.AddServerSideBlazor()
                 .AddHubOptions(o => o.MaximumReceiveMessageSize = 100_000_000);
         }

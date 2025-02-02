@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+  </PropertyGroup>
+  
   <ItemGroup>
     <Compile Remove="Shared\**" />
     <Content Remove="Shared\**" />
@@ -15,7 +20,10 @@
 
   <ItemGroup>
     <PackageReference Include="BlazorCameraStreamer" Version="3.0.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.20.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
   </ItemGroup>
+
 
   <ItemGroup>
     <Content Update="wwwroot\favicon.ico">

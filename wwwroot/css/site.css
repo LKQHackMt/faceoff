@@ -65,18 +65,26 @@ a, .btn-link {
 }
 
 #container {
-    width: 100%;
-    height: 90vh;
     position: relative;
     margin-left: auto;
     margin-right: auto;
     outline: 2px solid black;
-    background-image: url("/images/faceoffBackground.JPG")
+    height: 100%;
+    background-image: url("/images/faceoffBackground.JPG");
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 
-#frame {
-    position: absolute;
+.frame {
+    position: fixed;
+    margin-left: 15%;
+    margin-top: -3%;
+    border-radius: 30%;
+    
+    border: 2px solid red;
+    transition: all 1s;
 }
 
 #frame-content {
@@ -93,10 +101,12 @@ a, .btn-link {
 
 #mood {
     text-align: center;
-    font-size: 6vh;
+    position:absolute;
+    top:-30px;
+    font-size: 3vh;
     font-family: "Afacad Flux", serif;
     font-optical-sizing: auto;
-    font-weight: 400;
+    font-weight: 800;
     font-style: normal;
     font-variation-settings: "slnt" 0;
 }
@@ -114,3 +124,74 @@ video {
     font-style: normal;
     font-variation-settings: "slnt" 0;
 }
+
+.relative {
+    position: relative;
+    width: 640px;
+    height: 480px;
+}
+
+.emotion-container {
+    position: absolute;
+    top: -100px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.face-frame {
+    position: absolute;
+    border: 3px solid;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.emotion-indicator {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.emotion-text {
+    text-align: center;
+}
+
+.emotion-label {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.emotion-confidence {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.emotion-icon {
+    font-size: 20px;
+}
+
+/* Emotion-specific styles 
+.emotion-happy {
+    background: linear-gradient(rgba(76, 175, 80, 0.1), transparent);
+}
+
+.emotion-sad {
+    background: linear-gradient(rgba(33, 150, 243, 0.1), transparent);
+}
+
+.emotion-angry {
+    background: linear-gradient(rgba(244, 67, 54, 0.1), transparent);
+}
+
+.emotion-neutral {
+    background: linear-gradient(rgba(158, 158, 158, 0.1), transparent);
+}
+*/
