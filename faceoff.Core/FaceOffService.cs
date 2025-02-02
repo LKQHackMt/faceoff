@@ -76,10 +76,7 @@ namespace faceoff.Core
             var detectedFaces = DetectFaces(imageDataArray);
             
             
-            foreach (var face in detectedFaces)
-            {
-                // Console.WriteLine($"Detected face at ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
-            }return detectedFaces;
+            return detectedFaces;
         }
             // // dummy face coordinates
             // var faceCoordinates = new List<(int X, int Y, int Width, int Height)>
