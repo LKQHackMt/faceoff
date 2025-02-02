@@ -97,7 +97,7 @@
 
     private string ToTrackingStyle(DetectedFace face)
     {
-        return $"position: absolute; left: {face.X}px; top: {face.Y}px; width: {face.Width}px; height: {face.Height}px; border: 2px solid red;";
+        return $"position: absolute; left: {face.X}px; top: {face.Y}px; width: {face.Width}px; height: {face.Height}px; border: 2px solid {htmlColor};";
     }
 
     private void OnFrameHandler(string data)
@@ -126,11 +126,13 @@
 
         InvokeAsync(StateHasChanged);
 
+        TrackMood(EmotionType.Sad);
+
         //TODO: return x and y (middle of face) and width and height of face
         // Call TrackImage
         @* TrackImage((int)faces[0].X, (int)faces[0].Y, (int)faces[0].Width, (int)faces[0].Height); *@
 
-        // Call TrackMood
+        
     }
 
     private async void GetCurrentFrame()
@@ -148,7 +150,7 @@
 
     private string TrackImage(int x, int y, int width, int height)
     {
-        return "position:absolute;" + trackingStyle.ToTrackingStyle(x, y, width, height) + "border: 2px solid red";
+        return "position:absolute;" + trackingStyle.ToTrackingStyle(x, y, width, height) + $"border: 2px solid {htmlColor}";
     }
 
     private void TrackMood(EmotionType emotion)
