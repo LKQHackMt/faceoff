@@ -57,6 +57,13 @@
         }
     }
 
+    // used to generate a float value declaring the similarity in X, Y coordinates between two faces
+    private int CompareCoord(DetectedFace oldF, DetectedFace newF) {
+        int absX = (int)Math.Abs(oldF.X - newF.X);
+        int absY = (int)Math.Abs(oldF.Y - newF.Y); 
+        return absX + absY;
+    }
+
     private async void OnFrameHandler(string data)
     {
         data = data[(data.IndexOf(',') + 1)..];
@@ -64,10 +71,13 @@
         // Converts base64 string to byteArray
         byte[] byteArray = System.Convert.FromBase64String(data);
 
-        faces = FaceOffService.CameraImageFeed(byteArray);
+        @* faces = FaceOffService.CameraImageFeed(byteArray); *@
         faceEmotionDataList.Clear(); // Clear previous data
 
-        foreach (var face in faces)
+        List<FaceEmotionData> newFaceEmotionDataList = new();
+        List<DetectedFace> newFaces = FaceOffService.CameraImageFeed(byteArray);;
+
+        foreach (var face in newFaces)
         {
             Console.WriteLine($"FACES FOUND AT ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
 
@@ -113,8 +123,43 @@
                 faceData.HtmlColor
             );
 
-            faceEmotionDataList.Add(faceData);
+            newFaceEmotionDataList.Add(faceData);
         }
+        
+        // arrange new list on similarity to old list
+        if (faceEmotionDataList.Any() && newFaceEmotionDataList.Any()) {
+
+            // for each element in the old list order the new list to fit that old element the best
+            for (int i=0; i<faces.Count && i<newFaces.Count; i++) {
+                List<int>similarityScores = new List<int>();
+
+                for (int j=0+i; j<newFaces.Count; j++) {
+                    similarityScores.Add(CompareCoord(faces[i], newFaces[j]));
+                }
+
+                // assign closest similarity to index i
+                if (similarityScores.Any()) {
+                   // find closest match for index
+
+                    int smallest = similarityScores[0];
+                    int index = 0;
+                    for (int s=0; s<similarityScores.Count; s++) {
+                        if (similarityScores[s] < smallest) {
+                            smallest = similarityScores[s];
+                            index = s;
+                        }
+                    }
+
+                    // move to that index
+                    var temp = newFaceEmotionDataList[smallest];
+                    newFaceEmotionDataList.RemoveAt(smallest);
+                    newFaceEmotionDataList.Insert(smallest, temp);
+                }
+            }
+        }
+
+        faces = newFaces;
+        faceEmotionDataList = newFaceEmotionDataList;
 
         if (!faces.Any())
         {
@@ -123,6 +168,8 @@
 
         InvokeAsync(StateHasChanged);
     }
+
+
 
     private string TrackImage(int x, int y, int width, int height, string HtmlColor)
     {
