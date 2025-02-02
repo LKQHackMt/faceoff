@@ -49,12 +49,44 @@ namespace faceoff.Core
             _anchors = GenerateAnchors();
         }
 
+        public void CameraImageFeed(byte[] imageDataArray)
+        {
+            //aggregate the face and emotion data
+            //if face is detected, call FaceDetectionModel
+            //then call EmotionRecognition
+            //else 
+            var currImageData = imageDataArray;
+            if (currImageData != null)
+            {
+                Console.WriteLine("Image data received");
+                FaceDetectionModel(currImageData);
+                //EmotionRecognition(currImageData);
+            }
+            else
+            {
+                Console.WriteLine("Image data not received");
+
+                return;
+            }
+        }
+
+        public void FaceDetectionModel(byte[] imageDataArray)
+        {
+            // dummy face coordinates
+            var faceCoordinates = new List<(int X, int Y, int Width, int Height)>
+            {
+                (50, 50, 100, 100),
+                (200, 200, 150, 150)
+            };
+
+          }
         /// <summary>
         /// Run the detection:
         ///   1. Preprocess the image
         ///   2. Evaluate the model
         ///   3. Decode outputs and apply NMS
         /// </summary>
+        /// 
         public List<DetectedFace> DetectFaces(byte[] imageData, float confidenceThreshold = 0.7f)
         {
             DenseTensor<float> inputTensor = PreprocessImage(imageData);

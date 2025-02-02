@@ -20,13 +20,9 @@
 
   <ItemGroup>
     <PackageReference Include="BlazorCameraStreamer" Version="3.0.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.20.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="faceoff.Core\faceoff.Core.csproj" />
-  </ItemGroup>
-
 
 
   <ItemGroup>
