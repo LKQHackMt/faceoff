@@ -7,6 +7,7 @@ using SixLabors.ImageSharp.Processing;
 namespace faceoff.Core
 {
     public class DetectedFace
+    public class DetectedFace
     {
         public float Confidence { get; set; }
         public float X { get; set; }
@@ -47,17 +48,21 @@ namespace faceoff.Core
         }
 
         public List<DetectedFace> CameraImageFeed(byte[] imageDataArray)
+        public List<DetectedFace> CameraImageFeed(byte[] imageDataArray)
         {
             //aggregate the face and emotion data
             //if face is detected, call FaceDetectionModel
             //then call EmotionRecognition
             //else 
             var currImageData = imageDataArray;
+
+
             if (currImageData != null)
             {
                 Console.WriteLine("Image data received");
                 return FaceDetectionModel(currImageData);
                 //EmotionRecognition(currImageData);
+                return DetectedFace;
             }
             else
             {
@@ -65,6 +70,7 @@ namespace faceoff.Core
 
                 return new List<DetectedFace>();
             }
+            
         }
 
         public List<DetectedFace> FaceDetectionModel(byte[] imageDataArray)
@@ -85,7 +91,8 @@ namespace faceoff.Core
             //     (200, 200, 150, 150)
             // };
 
-          }
+        //    return DetectedFace;
+        //}
         /// <summary>
         /// Run the detection:
         ///   1. Preprocess the image
@@ -169,6 +176,7 @@ namespace faceoff.Core
 
             // Use the same strides and box sizes as in the original implementation
             int[] strides = { 8, 16, 32, 64 };
+
             // Each feature map has a set of “min boxes”
             float[][] minBoxes = new float[][]
             {

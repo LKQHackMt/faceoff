@@ -1,14 +1,14 @@
-﻿@using faceoff.Core
-
-@page "/"
+﻿@page "/"
+@using faceoff.Core
 
 
 @inject faceoff.Core.FaceOffService FaceOffService
 
-<h3>FaceOffCore Integration</h3>
+@* <h3>FaceOffCore Integration</h3> 
 
 @inject ImageHandler IH
 <div id="container" style="position: relative;">
+<div id="container" >
     <CameraStreamer @ref=CameraStreamerReference
                 Width=640
                 Height=480
@@ -43,13 +43,13 @@
  </div>
 
 
- <style>
+<style>
 
-     body {
-         background-color: @htmlColor;
-     }
+    body {
+    background-color: @htmlColor;
+    }
 
- </style>
+</style>
 
 @code
  {
@@ -66,9 +66,17 @@
 
     private string moodText = "Neutral";
 
+    private string coordinateText = "";
     private string htmlColor = "grey";
 
     private string colorStyle = "";
+
+    private int width = 640;
+    private int height = 480;
+
+    private List<DetectedFace> detectFaces = new List<DetectedFace>();
+
+    //private object faceDetectedResponse;
 
     private async void OnRenderedHandler()
     {
@@ -130,23 +138,9 @@
 
         //TODO: return x and y (middle of face) and width and height of face
         // Call TrackImage
-        @* TrackImage((int)faces[0].X, (int)faces[0].Y, (int)faces[0].Width, (int)faces[0].Height); *@
-
-        
+        // Call TrackMood
     }
 
-    private async void GetCurrentFrame()
-    {
-        // TESTING ONLY... DELETE LATER
-        imageData = await CameraStreamerReference.GetCurrentFrameAsync();
-        var rand = new Random();
-        //assign x and y to the value of FaceDetectionModel
-        var x = (720); // Center horizontally
-        var y = (360); // Center vertically
-        TrackImage(x, y, 100, 200);
-        var mood = rand.Next(0, 4);
-        TrackMood((EmotionType)mood);
-    }
 
     private string TrackImage(int x, int y, int width, int height)
     {

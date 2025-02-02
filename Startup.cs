@@ -15,7 +15,6 @@ namespace faceoff
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<ImageHandler>();
             services.AddSingleton<FaceOffService>(sp => new FaceOffService("version-RFB-320.onnx"));
 
