@@ -21,21 +21,22 @@
     
     @foreach (var place in trackingStyles) {
         <div class="frame" style="@place">
-            <div id="mood">@moodText</div>
+            <div class="emotion-container @emotionClass" style="@containerStyle">
+                    <div class="face-frame" style="@trackingStyle">
+                        <div class="frame-content" style="@colorStyle" />
+                    </div>
+                    <div class="emotion-indicator">
+                        <div class="emotion-text" style="color: @htmlColor">
+                            <span class="emotion-label">@moodText</span>
+                            <div class="emotion-confidence">@(confidence > 0 ? $"{confidence:P0}" : "")</div>
+                        </div>
+                        <div class="emotion-icon">@GetEmotionIcon(moodText)</div>
+                    </div>
+            </div>
         </div>
     }
- </div>
- <div id="bottom-container">
-     <div id="mood">@moodText</div>
-     <div>
-@*          <button @onclick=Start>
-             Start
-         </button>
-         <button @onclick=Stop>
-             Stop
-         </button> *@
-     </div>
- </div>
+</div>
+
 
 
 <style>
