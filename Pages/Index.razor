@@ -5,11 +5,11 @@
 
 <h3>FaceOffCore Integration</h3>
 
-<button @onclick="AnalyzeImage">Analyze Image</button>
+@* <button @onclick="AnalyzeImage">Analyze Image</button>
 
-<p>@result</p>
+<p>@result</p> *@
 
-@code {
+@* @code {
     private string result = "Waiting for analysis...";
 
     private void AnalyzeImage()
@@ -20,7 +20,7 @@
         result = "Analysis started!";
     }
 }
-
+ *@
 
 
 @inject ImageHandler IH
@@ -124,6 +124,7 @@
         // TESTING ONLY... DELETE LATER
         imageData = await CameraStreamerReference.GetCurrentFrameAsync();
         var rand = new Random();
+        //assign x and y to the value of FaceDetectionModel
         var x = (720); // Center horizontally
         var y = (360); // Center vertically
         TrackImage(x, y, 100, 200);

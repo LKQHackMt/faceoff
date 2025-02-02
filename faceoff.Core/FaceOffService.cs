@@ -67,14 +67,24 @@ namespace faceoff.Core
             }
         }
 
-        public void FaceDetectionModel(byte[] imageDataArray)
+        public List<DetectedFace> FaceDetectionModel(byte[] imageDataArray)
         {
-            // dummy face coordinates
-            var faceCoordinates = new List<(int X, int Y, int Width, int Height)>
+
+        
+            var detectedFaces = DetectFaces(imageDataArray);
+            
+            
+            foreach (var face in detectedFaces)
             {
-                (50, 50, 100, 100),
-                (200, 200, 150, 150)
-            };
+                Console.WriteLine($"Detected face at ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
+            }return detectedFaces;
+
+            // // dummy face coordinates
+            // var faceCoordinates = new List<(int X, int Y, int Width, int Height)>
+            // {
+            //     (50, 50, 100, 100),
+            //     (200, 200, 150, 150)
+            // };
 
           }
         /// <summary>
