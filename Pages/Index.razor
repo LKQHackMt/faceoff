@@ -67,7 +67,7 @@ private async void OnFrameHandler(string data)
     faces = FaceOffService.CameraImageFeed(byteArray);
     faceEmotionDataList.Clear(); // Clear previous data
 
-    foreach (var face in faces.Select((face, index) => new { face, index }))
+        foreach (var face in faces.Select((face, index) => new { face, index }).OrderBy(d => d.face.X).ThenBy(d => d.face.Y))
     {
         var emotionResult = await _emotionService.DetectEmotion(face.face, byteArray);
 
@@ -109,8 +109,8 @@ private async void OnFrameHandler(string data)
         faceData.TrackingStyle = TrackImage(
             (int)(face.face.X + face.face.X / 4), 
             (int)(face.face.Y + face.face.Y / 4), 
-            (int)face.face.Width, 
-            (int)face.face.Height, 
+            (int)(face.face.Width * 1.5), 
+            (int)(face.face.Height * 1.5),
             faceData.HtmlColor
         );
 
