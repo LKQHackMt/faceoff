@@ -119,3 +119,73 @@ video {
     font-style: normal;
     font-variation-settings: "slnt" 0;
 }
+
+.relative {
+    position: relative;
+    width: 640px;
+    height: 480px;
+}
+
+.emotion-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.face-frame {
+    position: absolute;
+    border: 3px solid;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.emotion-indicator {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.emotion-text {
+    text-align: center;
+}
+
+.emotion-label {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.emotion-confidence {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.emotion-icon {
+    font-size: 32px;
+}
+
+/* Emotion-specific styles */
+.emotion-happy {
+    background: linear-gradient(rgba(76, 175, 80, 0.1), transparent);
+}
+
+.emotion-sad {
+    background: linear-gradient(rgba(33, 150, 243, 0.1), transparent);
+}
+
+.emotion-angry {
+    background: linear-gradient(rgba(244, 67, 54, 0.1), transparent);
+}
+
+.emotion-neutral {
+    background: linear-gradient(rgba(158, 158, 158, 0.1), transparent);
+}

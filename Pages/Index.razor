@@ -1,7 +1,6 @@
 ﻿@page "/"
 @using faceoff.Core
 
-
 @inject faceoff.Core.FaceOffService FaceOffService
 
 <h3>FaceOffCore Integration</h3> 
@@ -20,8 +19,7 @@
         <div class="frame" style="@trackingStyles[0]"></div>
     } *@
     
-    @foreach (var place in trackingStyles)
-    {
+    @foreach (var place in trackingStyles) {
         <div class="frame" style="@place">
             <div id="mood">@moodText</div>
         </div>
@@ -54,60 +52,34 @@
     private List<string> trackingStyles = new(); 
 
     private CameraStreamer CameraStreamerReference;
-
     private string cameraId = null;
-
-    private string imageData;
-
     private string trackingStyle = "display: none;";
-
     private string moodText = "Neutral";
-
     private string coordinateText = "";
     private string htmlColor = "grey";
-
     private string colorStyle = "";
+    private string emotionClass = "emotion-neutral";
+    private string containerStyle = "";
+    private float confidence = 0;
 
-    private int width = 640;
-    private int height = 480;
+    private EmotionDetectionService _emotionService;
 
-    private List<DetectedFace> detectFaces = new List<DetectedFace>();
-
-    //private object faceDetectedResponse;
+    protected override void OnInitialized()
+    {
+        _emotionService = new EmotionDetectionService("onnx_model.onnx");
+        base.OnInitialized();
+    }
 
     private async void OnRenderedHandler()
     {
-
-        // Check camera-access or ask user, if it's not allowed currently
         if (await CameraStreamerReference.GetCameraAccessAsync())
         {
-            // Reloading re-initializes the stream and starts the
-            // stream automatically if the Autostart parameter is set
             await CameraStreamerReference.ReloadAsync();
-
-            // If Autostart is not set, you have to manually start the stream again
-            /* await CameraStreamerReference.StartAsync(); */
         }
     }
 
-    private async void Start()
+    private async void OnFrameHandler(string data)
     {
-        await CameraStreamerReference.StartAsync();
-    }
-
-    private async void Stop()
-    {
-        await CameraStreamerReference.StopAsync();
-    }
-
-    private string ToTrackingStyle(DetectedFace face)
-    {
-        return $"position: absolute; left: {face.X}px; top: {face.Y}px; width: {face.Width}px; height: {face.Height}px; border: 2px solid {htmlColor};";
-    }
-
-    private void OnFrameHandler(string data)
-    {       
-        // Removes commas from string 
         data = data[(data.IndexOf(',') + 1)..];
 
         // Converts base64 string to byteArray
@@ -117,21 +89,30 @@
 
         trackingStyles = new List<string>();;
 
-        foreach (var face in faces)
-            {
-                Console.WriteLine($"FACES FOUND AT ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
-                trackingStyles.Add(TrackImage((int)(face.X + face.X / 4), (int)(face.Y + face.Y / 4), (int)face.Width, (int)face.Height));
-                @* trackingStyles.Add(ToTrackingStyle(face)); *@
-            }
+        foreach (var face in faces){
+            Console.WriteLine($"FACES FOUND AT ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
+            trackingStyles.Add(TrackImage((int)(face.X + face.X / 4), (int)(face.Y + face.Y / 4), (int)face.Width, (int)face.Height));
+
+            // Detect emotion for each face
+            var emotionResult = await _emotionService.DetectEmotion(face, byteArray);
+            UpdateEmotionDisplay(emotionResult.Emotion, emotionResult.Confidence);
+        }
+
 
         foreach (var style in trackingStyles) {
             Console.WriteLine($"StYLE COUNT: {trackingStyles.Count()}");
             Console.WriteLine(style);
         }
 
+        if (!faces.Any())
+        {
+            // Reset display when no faces detected
+            ResetEmotionDisplay();
+        }
+
         InvokeAsync(StateHasChanged);
 
-        TrackMood(EmotionType.Sad);
+        @* TrackMood(EmotionType.Sad); *@
 
         //TODO: return x and y (middle of face) and width and height of face
         // Call TrackImage
@@ -144,33 +125,59 @@
         return "position:absolute;" + trackingStyle.ToTrackingStyle(x, y, width, height) + $"border: 2px solid {htmlColor}";
     }
 
-    private void TrackMood(EmotionType emotion)
+    private void UpdateEmotionDisplay(string emotion, float confidenceValue)
     {
-        switch (emotion)
+        confidence = confidenceValue;
+        moodText = char.ToUpper(emotion[0]) + emotion.Substring(1);
+
+        switch (emotion.ToLower())
         {
-            case EmotionType.Happy:
-                colorStyle = colorStyle.ToColorStyle("green");
-                moodText = "😁";
-                htmlColor = "green";
+            case "happy":
+                htmlColor = "#4CAF50";
+                emotionClass = "emotion-happy";
+                colorStyle = "border-color: #4CAF50";
                 break;
-            case EmotionType.Sad:
-                colorStyle = colorStyle.ToColorStyle("aqua");
-                moodText = "😔";
-                htmlColor = "aqua";
+            case "sad":
+                htmlColor = "#2196F3";
+                emotionClass = "emotion-sad";
+                colorStyle = "border-color: #2196F3";
                 break;
-            case EmotionType.Angry:
-                colorStyle = colorStyle.ToColorStyle("red");
-                moodText = "🤬";
-                htmlColor = "red";
+            case "angry":
+                htmlColor = "#F44336";
+                emotionClass = "emotion-angry";
+                colorStyle = "border-color: #F44336";
                 break;
             default:
-                colorStyle = colorStyle.ToColorStyle("grey");
-                moodText = "😑";
-                htmlColor = "grey";
+                htmlColor = "#9E9E9E";
+                emotionClass = "emotion-neutral";
+                colorStyle = "border-color: #9E9E9E";
                 break;
         }
     }
 
+    private void ResetEmotionDisplay()
+    {
+        trackingStyle = "display: none;";
+        moodText = "Neutral";
+        htmlColor = "#9E9E9E";
+        emotionClass = "emotion-neutral";
+        colorStyle = "border-color: #9E9E9E";
+        confidence = 0;
+    }
 
+    private string GetEmotionIcon(string emotion) => emotion.ToLower() switch
+    {
+        "happy" => "😊",
+        "sad" => "😢",
+        "angry" => "😠",
+        "surprise" => "😮",
+        "fear" => "😨",
+        "disgust" => "🤢",
+        _ => "😐"
+    };
 
+    public void Dispose()
+    {
+        _emotionService?.Dispose();
+    }
 }
