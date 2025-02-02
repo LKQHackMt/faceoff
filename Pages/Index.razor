@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using faceoff.Core
 
 
 @inject faceoff.Core.FaceOffService FaceOffService
@@ -45,9 +46,9 @@
          <button @onclick=Stop>
              Stop
          </button> *@
-        <button @onclick=GetCurrentFrame>
+        @*         <button @onclick=GetCurrentFrame>
             Get Current Frame
-        </button>
+        </button> *@
     </div>
 </div>
 
@@ -76,7 +77,9 @@
 
     private string colorStyle = "";
 
-    private object faceDetectedResponse;
+    private List<DetectedFace> detectFaces = new List<DetectedFace>();
+
+    //private object faceDetectedResponse;
 
     private async void OnRenderedHandler()
     {
@@ -110,9 +113,15 @@
 
         // Converts base64 string to byteArray
         byte[] byteArray =  (System.Convert.FromBase64String(data));
-        faceDetectedResponse = FaceOffService.CameraImageFeed(byteArray);
-
-        GetCurrentFrame();
+        
+        
+        var faces = FaceOffService.CameraImageFeed(byteArray);
+        
+        foreach(var face  in faces)
+        {
+            TrackImage((int)face.X, (int)face.Y, (int)face.Width, (int)face.Height);
+        }
+        
         // Proof of storing byte array
         //IH.SaveBinary(byteArray, "C:/Users/Acrad/Desktop/coderStuff/explosion(maybe)/jeez.jpg");
 
@@ -120,14 +129,8 @@
         // Call TrackImage
         // Call TrackMood
     }
-    public class faceDetectedResponse
-    {
-        public int x { get; set; }
-        public int y { get; set; }
-        public int width { get; set; }
-        public int height { get; set; }
-    }
-    private async void GetCurrentFrame(List<faceDetectedResponse>)
+
+    private async void GetCurrentFrame()
     {
         // TESTING ONLY... DELETE LATER
         imageData = await CameraStreamerReference.GetCurrentFrameAsync();
