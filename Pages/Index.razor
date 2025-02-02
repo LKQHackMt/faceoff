@@ -24,7 +24,7 @@
     {
         Console.WriteLine(place);
         <div class="frame" style="@place">
-            <div style="position:absolute;top:-30px;">@moodText</div>
+            <div>@moodText</div>
         </div>
     }
  </div>
@@ -151,22 +151,22 @@
         {
             case EmotionType.Happy:
                 colorStyle = colorStyle.ToColorStyle("green");
-                moodText = "Happy";
+                moodText = "😁";
                 htmlColor = "green";
                 break;
             case EmotionType.Sad:
                 colorStyle = colorStyle.ToColorStyle("aqua");
-                moodText = "Sad 😔";
+                moodText = "😔";
                 htmlColor = "aqua";
                 break;
             case EmotionType.Angry:
                 colorStyle = colorStyle.ToColorStyle("red");
-                moodText = "Angry";
+                moodText = "🤬";
                 htmlColor = "red";
                 break;
             default:
                 colorStyle = colorStyle.ToColorStyle("grey");
-                moodText = "Neutral";
+                moodText = "😑";
                 htmlColor = "grey";
                 break;
         }
