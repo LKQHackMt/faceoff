@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using faceoff.Core
+@using System.Diagnostics
 
 @inject faceoff.Core.FaceOffService FaceOffService
 
@@ -58,10 +59,19 @@
     }
 
     // used to generate a float value declaring the similarity in X, Y coordinates between two faces
-    private int CompareCoord(DetectedFace oldF, DetectedFace newF) {
+    @* private int CompareCoords(DetectedFace oldF, DetectedFace newF) {
         int absX = (int)Math.Abs(oldF.X - newF.X);
         int absY = (int)Math.Abs(oldF.Y - newF.Y); 
         return absX + absY;
+    } *@
+
+    // used to generate a float value declaring the similarity in X, Y coordinates between two faces
+    private bool CloseCoord(DetectedFace oldF, DetectedFace newF) {
+        int threshold = 50;
+        int absX = (int)Math.Abs(oldF.X - newF.X);
+        int absY = (int)Math.Abs(oldF.Y - newF.Y); 
+        
+        return (absX + absY < threshold) ? true : false;
     }
 
     private async void OnFrameHandler(string data)
@@ -127,14 +137,14 @@
         }
         
         // arrange new list on similarity to old list
-        if (faceEmotionDataList.Any() && newFaceEmotionDataList.Any()) {
+        @* if (faceEmotionDataList.Any() && newFaceEmotionDataList.Any()) {
 
             // for each element in the old list order the new list to fit that old element the best
             for (int i=0; i<faces.Count && i<newFaces.Count; i++) {
                 List<int>similarityScores = new List<int>();
 
                 for (int j=0+i; j<newFaces.Count; j++) {
-                    similarityScores.Add(CompareCoord(faces[i], newFaces[j]));
+                    similarityScores.Add(CompareCoords(faces[i], newFaces[j]));
                 }
 
                 // assign closest similarity to index i
@@ -156,7 +166,25 @@
                     newFaceEmotionDataList.Insert(smallest, temp);
                 }
             }
+        } *@
+
+        var sw = new Stopwatch();
+        sw.Start();
+
+        if (faceEmotionDataList.Any() && newFaceEmotionDataList.Any()) {
+            for (int i=0; i<faces.Count && i<newFaces.Count; i++) {
+                for (int j=0+i; j<newFaces.Count; j++) {
+                    if (CloseCoord(faces[i], newFaces[j])) {
+                        var temp = newFaceEmotionDataList[j];
+                        newFaceEmotionDataList.RemoveAt(j);
+                        newFaceEmotionDataList.Insert(i, temp);
+                    }
+                }
+            }
         }
+
+        sw.Stop();
+        Console.WriteLine($"Time to sort: {sw.ElapsedMilliseconds}");
 
         faces = newFaces;
         faceEmotionDataList = newFaceEmotionDataList;
