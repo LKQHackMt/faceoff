@@ -76,9 +76,9 @@ a, .btn-link {
 }
 
 
-#frame {
+.frame {
     position: fixed;
-    margin-left: 15%;
+    margin-left: 29%;
 }
 
 #frame-content {

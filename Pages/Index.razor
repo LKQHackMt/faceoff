@@ -4,11 +4,10 @@
 
 @inject faceoff.Core.FaceOffService FaceOffService
 
-@* <h3>FaceOffCore Integration</h3> 
+<h3>FaceOffCore Integration</h3> 
 
 @inject ImageHandler IH
 <div id="container" style="position: relative;">
-<div id="container" >
     <CameraStreamer @ref=CameraStreamerReference
                 Width=640
                 Height=480
@@ -36,9 +35,6 @@
          <button @onclick=Stop>
              Stop
          </button> *@
-         <button @onclick=GetCurrentFrame>
-             Get Current Frame
-         </button>
      </div>
  </div>
 
