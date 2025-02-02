@@ -7,6 +7,17 @@ using SixLabors.ImageSharp.Processing;
 using System.IO.Compression;
 using System.Linq;
 
+public class FaceEmotionData
+{
+    public string TrackingStyle { get; set; }
+    public string MoodText { get; set; }
+    public string HtmlColor { get; set; }
+    public string EmotionClass { get; set; }
+    public string ColorStyle { get; set; }
+    public string ContainerStyle { get; set; }
+    public float Confidence { get; set; }
+}
+
 public class EmotionResult
 {
     public string Emotion { get; set; }
