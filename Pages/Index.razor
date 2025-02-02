@@ -23,32 +23,20 @@
  <p>@result</p>*@
 
 @inject ImageHandler IH
-<div id="container">
+<div id="container" >
     <CameraStreamer @ref=CameraStreamerReference
     Width=640
-    Height=360
+    Height=480
     OnRendered=OnRenderedHandler
     OnFrame=OnFrameHandler
-    Style="width: 100%; height: 100%;"
+    Style="width: 640px; height:480px;"
     CameraID=@cameraId
     Autostart />
+
     <div id="frame" style=@trackingStyle>
         <div id="frame-content" style="@colorStyle"/>
         <div class="text-below" style="color: @htmlColor">@moodText</div>
-    </div>
-</div>
-<div id="bottom-container">
-    <div id="mood">@moodText</div>
-    <div>
-        @*          <button @onclick=Start>
-             Start
-         </button>
-         <button @onclick=Stop>
-             Stop
-         </button> *@
-        @*         <button @onclick=GetCurrentFrame>
-            Get Current Frame
-        </button> *@
+        <div class="text-below" style="color: @htmlColor">@coordinateText</div>
     </div>
 </div>
 
@@ -73,9 +61,13 @@
 
     private string moodText = "Neutral";
 
+    private string coordinateText = "";
     private string htmlColor = "grey";
 
     private string colorStyle = "";
+
+    private int width = 640;
+    private int height = 480;
 
     private List<DetectedFace> detectFaces = new List<DetectedFace>();
 
@@ -119,7 +111,8 @@
         
         foreach(var face  in faces)
         {
-            TrackImage((int)face.X, (int)face.Y, (int)face.Width, (int)face.Height);
+            coordinateText = (int)(face.X) + " " + (int)(face.Y);
+            TrackImage((int)(face.X+face.X/4), (int)(face.Y+face.Y/4), (int)(face.Width ), (int)(face.Height));
         }
         
         // Proof of storing byte array
@@ -130,17 +123,6 @@
         // Call TrackMood
     }
 
-    private async void GetCurrentFrame()
-    {
-        // TESTING ONLY... DELETE LATER
-        imageData = await CameraStreamerReference.GetCurrentFrameAsync();
-        var rand = new Random();
-        var x = (720); // Center horizontally
-        var y = (360); // Center vertically
-        TrackImage(x, y, 100, 200);
-        var mood = rand.Next(0, 4);
-
-    }
 
     private void TrackImage(int x, int y, int width, int height)
     {

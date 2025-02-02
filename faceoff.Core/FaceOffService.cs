@@ -186,6 +186,7 @@ namespace faceoff.Core
 
             // Use the same strides and box sizes as in the original implementation
             int[] strides = { 8, 16, 32, 64 };
+
             // Each feature map has a set of “min boxes”
             float[][] minBoxes = new float[][]
             {
