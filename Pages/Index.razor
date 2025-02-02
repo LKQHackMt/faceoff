@@ -7,26 +7,8 @@
 
 <h3>FaceOffCore Integration</h3>
 
-@* <button @onclick="AnalyzeImage">Analyze Image</button>
-
-<p>@result</p> *@
-
-@* @code {
-    private string result = "Waiting for analysis...";
-
-    private void AnalyzeImage()
-    {
-
-        byte[] dummyData = new byte[] { 0x01, 0x02, 0x03 }; 
-        FaceOffService.CameraImageFeed(dummyData);
-        result = "Analysis started!";
-    }
-}
- *@
-
-
 @inject ImageHandler IH
-<div id="container">
+<div id="container" style="position: relative;">
     <CameraStreamer @ref=CameraStreamerReference
                 Width=640
                 Height=360
@@ -35,10 +17,15 @@
                 Style="width: 100%; height: 100%;"
                 CameraID=@cameraId
                 Autostart />
-    <div id="frame" style=@trackingStyle>
-        <div id="frame-content" style="@colorStyle"/>
-        <div class="text-below" style="color: @htmlColor">@moodText</div>
-    </div>
+    @* @if (trackingStyles.Any()) {
+        <div class="frame" style="@trackingStyles[0]"></div>
+    } *@
+    
+    @foreach (var place in trackingStyles)
+    {
+        Console.WriteLine(place);
+        <div class="frame" style="@place"></div>
+    }
  </div>
  <div id="bottom-container">
      <div id="mood">@moodText</div>
@@ -66,6 +53,9 @@
 
 @code
  {
+    private List<DetectedFace> faces = new(); 
+    private List<string> trackingStyles = new(); 
+
     private CameraStreamer CameraStreamerReference;
 
     private string cameraId = null;
@@ -105,6 +95,11 @@
         await CameraStreamerReference.StopAsync();
     }
 
+    private string ToTrackingStyle(DetectedFace face)
+    {
+        return $"position: absolute; left: {face.X}px; top: {face.Y}px; width: {face.Width}px; height: {face.Height}px; border: 2px solid red;";
+    }
+
     private void OnFrameHandler(string data)
     {       
         // Removes commas from string 
@@ -113,15 +108,28 @@
         // Converts base64 string to byteArray
         byte[] byteArray =  (System.Convert.FromBase64String(data));
 
-        List<DetectedFace> faces = FaceOffService.CameraImageFeed(byteArray);
+        faces = FaceOffService.CameraImageFeed(byteArray);
+
+        trackingStyles = new List<string>();;
 
         foreach (var face in faces)
             {
                 Console.WriteLine($"FACES FOUND AT ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
+                trackingStyles.Add(TrackImage((int)face.X, (int)face.Y, (int)face.Width, (int)face.Height));
+                @* trackingStyles.Add(ToTrackingStyle(face)); *@
             }
+
+        foreach (var style in trackingStyles) {
+            Console.WriteLine($"StYLE COUNT: {trackingStyles.Count()}");
+            Console.WriteLine(style);
+        }
+
+        InvokeAsync(StateHasChanged);
 
         //TODO: return x and y (middle of face) and width and height of face
         // Call TrackImage
+        @* TrackImage((int)faces[0].X, (int)faces[0].Y, (int)faces[0].Width, (int)faces[0].Height); *@
+
         // Call TrackMood
     }
 
@@ -138,9 +146,9 @@
         TrackMood((EmotionType)mood);
     }
 
-    private void TrackImage(int x, int y, int width, int height)
+    private string TrackImage(int x, int y, int width, int height)
     {
-        trackingStyle = trackingStyle.ToTrackingStyle(x, y, width, height);
+        return "position:absolute;" + trackingStyle.ToTrackingStyle(x, y, width, height) + "border: 2px solid red";
     }
 
     private void TrackMood(EmotionType emotion)
