@@ -79,6 +79,7 @@ a, .btn-link {
 .frame {
     position: fixed;
     margin-left: 29%;
+    border-radius: 30%;
 }
 
 #frame-content {
@@ -95,10 +96,12 @@ a, .btn-link {
 
 #mood {
     text-align: center;
-    font-size: 6vh;
+    position:absolute;
+    top:-30px;
+    font-size: 3vh;
     font-family: "Afacad Flux", serif;
     font-optical-sizing: auto;
-    font-weight: 400;
+    font-weight: 800;
     font-style: normal;
     font-variation-settings: "slnt" 0;
 }
