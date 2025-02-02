@@ -11,11 +11,11 @@
 <div id="container" style="position: relative;">
     <CameraStreamer @ref=CameraStreamerReference
                 Width=640
-                Height=360
+                Height=480
                 OnRendered=OnRenderedHandler
                 OnFrame=OnFrameHandler
-                Style="width: 100%; height: 100%;"
                 CameraID=@cameraId
+                Style="width: 640px; height:480px;"
                 Autostart />
     @* @if (trackingStyles.Any()) {
         <div class="frame" style="@trackingStyles[0]"></div>
@@ -115,7 +115,7 @@
         foreach (var face in faces)
             {
                 Console.WriteLine($"FACES FOUND AT ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
-                trackingStyles.Add(TrackImage((int)face.X, (int)face.Y, (int)face.Width, (int)face.Height));
+                trackingStyles.Add(TrackImage((int)(face.X + face.X / 4), (int)(face.Y + face.Y / 4), (int)face.Width, (int)face.Height));
                 @* trackingStyles.Add(ToTrackingStyle(face)); *@
             }
 

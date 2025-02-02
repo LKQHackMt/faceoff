@@ -70,7 +70,6 @@ namespace faceoff.Core
         public List<DetectedFace> FaceDetectionModel(byte[] imageDataArray)
         {
 
-        
             var detectedFaces = DetectFaces(imageDataArray);
             
             
