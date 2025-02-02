@@ -17,7 +17,8 @@ namespace faceoff
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<ImageHandler>();
-            services.AddSingleton<FaceOffService>();
+            services.AddSingleton<FaceOffService>(sp => new FaceOffService("version-RFB-320.onnx"));
+
             services.AddServerSideBlazor()
                 .AddHubOptions(o => o.MaximumReceiveMessageSize = 100_000_000);
         }

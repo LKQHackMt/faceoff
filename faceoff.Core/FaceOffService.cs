@@ -3,9 +3,6 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace faceoff.Core
 {
@@ -89,12 +86,16 @@ namespace faceoff.Core
         /// 
         public List<DetectedFace> DetectFaces(byte[] imageData, float confidenceThreshold = 0.7f)
         {
+            using Image<Rgb24> originalImage = Image.Load<Rgb24>(imageData);
+            int originalWidth = originalImage.Width;
+            int originalHeight = originalImage.Height;
+
             DenseTensor<float> inputTensor = PreprocessImage(imageData);
 
             var inputs = new List<NamedOnnxValue>
-            {
-                NamedOnnxValue.CreateFromTensor(InputName, inputTensor)
-            };
+    {
+        NamedOnnxValue.CreateFromTensor(InputName, inputTensor)
+    };
 
             using IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results = _session.Run(inputs);
             var bboxOut = results.FirstOrDefault(o => o.Name == OutputNameBbox)?.AsTensor<float>();
@@ -107,6 +108,19 @@ namespace faceoff.Core
             float[] confArray = confOut.ToArray();
 
             var faces = DecodeAndNms(bboxArray, confArray, _anchors, confidenceThreshold);
+
+            // Scale bounding boxes back to the original image size
+            float scaleX = (float)originalWidth / InputWidth;
+            float scaleY = (float)originalHeight / InputHeight;
+
+            foreach (var face in faces)
+            {
+                face.X *= scaleX;
+                face.Y *= scaleY;
+                face.Width *= scaleX;
+                face.Height *= scaleY;
+            }
+
             return faces;
         }
 
