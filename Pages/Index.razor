@@ -57,72 +57,74 @@
         }
     }
 
-    private async void OnFrameHandler(string data)
+private async void OnFrameHandler(string data)
+{
+    data = data[(data.IndexOf(',') + 1)..];
+
+    // Converts base64 string to byteArray
+    byte[] byteArray = System.Convert.FromBase64String(data);
+
+    faces = FaceOffService.CameraImageFeed(byteArray);
+    faceEmotionDataList.Clear(); // Clear previous data
+
+    foreach (var face in faces.Select((face, index) => new { face, index }))
     {
-        data = data[(data.IndexOf(',') + 1)..];
+        var emotionResult = await _emotionService.DetectEmotion(face.face, byteArray);
 
-        // Converts base64 string to byteArray
-        byte[] byteArray = System.Convert.FromBase64String(data);
-
-        faces = FaceOffService.CameraImageFeed(byteArray);
-        faceEmotionDataList.Clear(); // Clear previous data
-
-        foreach (var face in faces)
+        var faceData = new FaceEmotionData
         {
-            Console.WriteLine($"FACES FOUND AT ({face.X}, {face.Y}), size ({face.Width}x{face.Height}), confidence: {face.Confidence}");
+            FaceId = face.index,  // Assign unique face ID (or index)
+            Confidence = emotionResult.Confidence,
+            MoodText = char.ToUpper(emotionResult.Emotion[0]) + emotionResult.Emotion.Substring(1),
+        };
 
-            var emotionResult = await _emotionService.DetectEmotion(face, byteArray);
 
-            var faceData = new FaceEmotionData
-            {
-                Confidence = emotionResult.Confidence,
-                MoodText = char.ToUpper(emotionResult.Emotion[0]) + emotionResult.Emotion.Substring(1),
-            };
 
-            // Set styles based on emotion **before** tracking the frame
-            switch (emotionResult.Emotion.ToLower())
-            {
-                case "happy":
-                    faceData.HtmlColor = "#4CAF50";
-                    faceData.EmotionClass = "emotion-happy";
-                    faceData.ColorStyle = "border-color: #4CAF50";
-                    break;
-                case "sad":
-                    faceData.HtmlColor = "#2196F3";
-                    faceData.EmotionClass = "emotion-sad";
-                    faceData.ColorStyle = "border-color: #2196F3";
-                    break;
-                case "angry":
-                    faceData.HtmlColor = "#F44336";
-                    faceData.EmotionClass = "emotion-angry";
-                    faceData.ColorStyle = "border-color: #F44336";
-                    break;
-                default:
-                    faceData.HtmlColor = "#9E9E9E";
-                    faceData.EmotionClass = "emotion-neutral";
-                    faceData.ColorStyle = "border-color: #9E9E9E";
-                    break;
-            }
-
-            // Now track the frame using the updated HtmlColor
-            faceData.TrackingStyle = TrackImage(
-                (int)(face.X + face.X / 4), 
-                (int)(face.Y + face.Y / 4), 
-                (int)face.Width, 
-                (int)face.Height, 
-                faceData.HtmlColor
-            );
-
-            faceEmotionDataList.Add(faceData);
+        // Set styles based on emotion **before** tracking the frame
+        switch (emotionResult.Emotion.ToLower())
+        {
+            case "happy":
+                faceData.HtmlColor = "#4CAF50";
+                faceData.EmotionClass = "emotion-happy";
+                faceData.ColorStyle = "border-color: #4CAF50";
+                break;
+            case "sad":
+                faceData.HtmlColor = "#2196F3";
+                faceData.EmotionClass = "emotion-sad";
+                faceData.ColorStyle = "border-color: #2196F3";
+                break;
+            case "angry":
+                faceData.HtmlColor = "#F44336";
+                faceData.EmotionClass = "emotion-angry";
+                faceData.ColorStyle = "border-color: #F44336";
+                break;
+            default:
+                faceData.HtmlColor = "#9E9E9E";
+                faceData.EmotionClass = "emotion-neutral";
+                faceData.ColorStyle = "border-color: #9E9E9E";
+                break;
         }
 
-        if (!faces.Any())
-        {
-            faceEmotionDataList.Clear(); // Reset display when no faces detected
-        }
+        // Now track the frame using the updated HtmlColor
+        faceData.TrackingStyle = TrackImage(
+            (int)(face.face.X + face.face.X / 4), 
+            (int)(face.face.Y + face.face.Y / 4), 
+            (int)face.face.Width, 
+            (int)face.face.Height, 
+            faceData.HtmlColor
+        );
 
-        InvokeAsync(StateHasChanged);
+        faceEmotionDataList.Add(faceData);
     }
+
+    if (!faces.Any())
+    {
+        faceEmotionDataList.Clear(); // Reset display when no faces detected
+    }
+
+    InvokeAsync(StateHasChanged);
+}
+
 
     private string TrackImage(int x, int y, int width, int height, string HtmlColor)
     {

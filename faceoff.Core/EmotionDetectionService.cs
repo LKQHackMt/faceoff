@@ -9,6 +9,7 @@ using System.Linq;
 
 public class FaceEmotionData
 {
+    public int FaceId { get; set; }
     public string TrackingStyle { get; set; }
     public string MoodText { get; set; }
     public string HtmlColor { get; set; }
