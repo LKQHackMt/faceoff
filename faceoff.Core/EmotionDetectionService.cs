@@ -15,20 +15,25 @@ public class EmotionResult
 
 public class EmotionDetectionService : IDisposable
 {
-    private const int EmotionInputSize = 48;
+    // Update constants for the new model
+    private const int EmotionInputSize = 224;  // Changed from 48 to 224
+    private const int InputChannels = 3;       // Changed from 1 to 3
+
     private readonly InferenceSession _session;
-    // Updated emotion labels to match the PyTorch model
     private readonly string[] _emotionLabels = new[]
     {
-        "angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"
+        "angry", "contempt", "disgusted", "fear", "happy", "neutral", "sad", "surprise"
     };
+
+    // EfficientNet normalization values (ImageNet statistics)
+    private readonly float[] ChannelMeans = new float[] { 0.485f, 0.456f, 0.406f };
+    private readonly float[] ChannelStds = new float[] { 0.229f, 0.224f, 0.225f };
 
     public EmotionDetectionService(string modelPath)
     {
-       
         _session = new InferenceSession(modelPath);
 
-        // Debug: Print model information
+        // Print model information for debugging
         Console.WriteLine("\nModel Information:");
         foreach (var input in _session.InputMetadata)
         {
@@ -36,20 +41,77 @@ public class EmotionDetectionService : IDisposable
             Console.WriteLine($"Input Shape: [{string.Join(",", input.Value.Dimensions)}]");
             Console.WriteLine($"Input Type: {input.Value.ElementType}");
         }
-
-        Console.WriteLine("\nOutput Information:");
-        foreach (var output in _session.OutputMetadata)
-        {
-            Console.WriteLine($"Output Name: {output.Key}");
-            Console.WriteLine($"Output Shape: [{string.Join(",", output.Value.Dimensions)}]");
-            Console.WriteLine($"Output Type: {output.Value.ElementType}");
-        }
     }
 
     public async Task<EmotionResult> DetectEmotion(DetectedFace face, byte[] originalImageData)
     {
         using var image = Image.Load<Rgb24>(originalImageData);
 
+        // Your existing face cropping logic remains the same
+        var rectangle = CalculateFaceCropRectangle(face, image.Width, image.Height);
+
+        // Process image: crop -> resize (no grayscale conversion)
+        using var faceImage = image.Clone(ctx => ctx
+            .Crop(rectangle)
+            .Resize(EmotionInputSize, EmotionInputSize));
+
+        // Create tensor with new dimensions [1, 3, 224, 224]
+        var tensor = new DenseTensor<float>(new[] { 1, InputChannels, EmotionInputSize, EmotionInputSize });
+
+        // Fill tensor with normalized RGB values
+        for (int y = 0; y < EmotionInputSize; y++)
+        {
+            for (int x = 0; x < EmotionInputSize; x++)
+            {
+                var pixel = faceImage[x, y];
+
+                // Normalize each channel separately using ImageNet statistics
+                tensor[0, 0, y, x] = (pixel.R / 255f - ChannelMeans[0]) / ChannelStds[0];  // R channel
+                tensor[0, 1, y, x] = (pixel.G / 255f - ChannelMeans[1]) / ChannelStds[1];  // G channel
+                tensor[0, 2, y, x] = (pixel.B / 255f - ChannelMeans[2]) / ChannelStds[2];  // B channel
+            }
+        }
+
+        // Create input with the correct name from your model
+        string inputName = _session.InputMetadata.Keys.First();
+        var inputs = new List<NamedOnnxValue>
+        {
+            NamedOnnxValue.CreateFromTensor(inputName, tensor)
+        };
+
+        // Run inference
+        using var results = _session.Run(inputs);
+        var output = results.First().AsTensor<float>();
+
+        // Process results
+        int numEmotions = output.Dimensions[1];
+        var probabilities = new float[numEmotions];
+        for (int i = 0; i < numEmotions; i++)
+        {
+            probabilities[i] = output[0, i];
+        }
+
+        // Apply softmax to get probabilities
+        probabilities = Softmax(probabilities);
+
+        // Log probabilities for debugging
+        Console.WriteLine("\nEmotion probabilities:");
+        for (int i = 0; i < Math.Min(numEmotions, _emotionLabels.Length); i++)
+        {
+            Console.WriteLine($"{_emotionLabels[i]}: {probabilities[i]:P2}");
+        }
+
+        int maxIndex = Array.IndexOf(probabilities, probabilities.Max());
+
+        return new EmotionResult
+        {
+            Emotion = maxIndex < _emotionLabels.Length ? _emotionLabels[maxIndex] : $"emotion_{maxIndex}",
+            Confidence = probabilities[maxIndex]
+        };
+    }
+
+    private Rectangle CalculateFaceCropRectangle(DetectedFace face, int imageWidth, int imageHeight)
+    {
         // Calculate face center
         var centerX = face.X + (face.Width / 2);
         var centerY = face.Y + (face.Height / 2);
@@ -74,102 +136,27 @@ public class EmotionDetectionService : IDisposable
             bottom += Math.Abs(top);
             top = 0;
         }
-        if (right > image.Width)
+        if (right > imageWidth)
         {
-            left -= (right - image.Width);
-            right = image.Width;
+            left -= (right - imageWidth);
+            right = imageWidth;
         }
-        if (bottom > image.Height)
+        if (bottom > imageHeight)
         {
-            top -= (bottom - image.Height);
-            bottom = image.Height;
+            top -= (bottom - imageHeight);
+            bottom = imageHeight;
         }
 
-        // Ensure left and top are not negative after adjustments
+        // Ensure coordinates are within bounds
         left = Math.Max(0, left);
         top = Math.Max(0, top);
 
-        // Calculate final width and height
-        var width = Math.Min(right - left, image.Width - left);
-        var height = Math.Min(bottom - top, image.Height - top);
+        var width = Math.Min(right - left, imageWidth - left);
+        var height = Math.Min(bottom - top, imageHeight - top);
 
-        // Create rectangle with validated coordinates
-        var rectangle = new Rectangle(
-            (int)left,
-            (int)top,
-            (int)width,
-            (int)height
-        );
-
-        // Debug output
-        Console.WriteLine($"Image dimensions: {image.Width}x{image.Height}");
-        Console.WriteLine($"Face detection: X={face.X}, Y={face.Y}, Width={face.Width}, Height={face.Height}");
-        Console.WriteLine($"Crop rectangle: X={rectangle.X}, Y={rectangle.Y}, Width={rectangle.Width}, Height={rectangle.Height}");
-
-        // Verify rectangle is valid before cropping
-        if (rectangle.Width <= 0 || rectangle.Height <= 0 ||
-            rectangle.Right > image.Width || rectangle.Bottom > image.Height)
-        {
-            throw new ArgumentException($"Invalid crop rectangle: {rectangle}");
-        }
-
-        // Process image with validated rectangle
-        using var faceImage = image.Clone(ctx => ctx
-            .Crop(rectangle)
-            .Grayscale()
-            .Resize(EmotionInputSize, EmotionInputSize));
-
-        // Create tensor [1, 1, 48, 48]
-        var tensor = new DenseTensor<float>(new[] { 1, 1, EmotionInputSize, EmotionInputSize });
-
-        // Normalize values from [0, 255] to [-1, 1]
-        const float SCALE = 1.0f / 255.0f;
-
-        for (int y = 0; y < EmotionInputSize; y++)
-        {
-            for (int x = 0; x < EmotionInputSize; x++)
-            {
-                var pixel = faceImage[x, y];
-                float normalized = (pixel.R * SCALE * 2.0f) - 1.0f;
-                tensor[0, 0, y, x] = normalized;
-            }
-        }
-
-        // Get the correct input name and run inference
-        string inputName = _session.InputMetadata.Keys.First();
-        var inputs = new List<NamedOnnxValue>
-    {
-        NamedOnnxValue.CreateFromTensor(inputName, tensor)
-    };
-
-        using var results = _session.Run(inputs);
-        var output = results.First().AsTensor<float>();
-
-        // Process results
-        int numEmotions = output.Dimensions[1];
-        var probabilities = new float[numEmotions];
-        for (int i = 0; i < numEmotions; i++)
-        {
-            probabilities[i] = output[0, i];
-        }
-
-        probabilities = Softmax(probabilities);
-
-        // Log probabilities
-        Console.WriteLine("\nEmotion probabilities:");
-        for (int i = 0; i < Math.Min(numEmotions, _emotionLabels.Length); i++)
-        {
-            Console.WriteLine($"{_emotionLabels[i]}: {probabilities[i]:P2}");
-        }
-
-        int maxIndex = Array.IndexOf(probabilities, probabilities.Max());
-
-        return new EmotionResult
-        {
-            Emotion = maxIndex < _emotionLabels.Length ? _emotionLabels[maxIndex] : $"emotion_{maxIndex}",
-            Confidence = probabilities[maxIndex]
-        };
+        return new Rectangle((int)left, (int)top, (int)width, (int)height);
     }
+
     private float[] Softmax(float[] logits)
     {
         float maxLogit = logits.Max();
@@ -182,8 +169,6 @@ public class EmotionDetectionService : IDisposable
     {
         _session?.Dispose();
     }
-
-    // ExtractModel method remains the same...
 }
 // Simple TAR reader implementation
 public class TarReader : IDisposable

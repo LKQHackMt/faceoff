@@ -1,125 +1,341 @@
 ﻿@page "/"
+@using SixLabors.ImageSharp
+@using System.Collections.Concurrent
+@using SixLabors.ImageSharp.Processing
 @using faceoff.Core
 
 @inject faceoff.Core.FaceOffService FaceOffService
 @inject ImageHandler IH
 
-<div class="relative">
+<div class="camera-container">
     <CameraStreamer @ref=CameraStreamerReference
-                    Width=640
-                    Height=480
-                    OnRendered=OnRenderedHandler
-                    OnFrame=OnFrameHandler
-                    Style="width: 640px; height:480px;"
-                    CameraID=@cameraId
-                    Autostart />
+    Width=640
+    Height=480
+    OnRendered=OnRenderedHandler
+    OnFrame=OnFrameHandler
+    Style="width: 640px; height:480px;"
+    CameraID=@cameraId
+    Autostart />
 
-    <div class="emotion-container @emotionClass" style="@containerStyle">
-        <div class="face-frame" style="@trackingStyle">
-            <div class="frame-content" style="@colorStyle" />
-        </div>
-        <div class="emotion-indicator">
-            <div class="emotion-text" style="color: @htmlColor">
-                <span class="emotion-label">@moodText</span>
-                <div class="emotion-confidence">@(confidence > 0 ? $"{confidence:P0}" : "")</div>
+    <div class="face-tracking-layer">
+        @foreach (var face in trackedFaces)
+        {
+            <div class="face-frame @face.EmotionClass" style="@face.TrackingStyle">
+                <div class="face-info-box" style="background: linear-gradient(45deg, @face.Color, @face.ColorSecondary)">
+                    <div class="info-section emotion-section">
+                        <div class="emotion-emoji">@GetEmotionIcon(face.MoodText)</div>
+                        <div class="info-details">
+                            <span class="info-primary">@face.MoodText</span>
+                            <span class="info-secondary">@(face.Confidence.ToString("P0"))</span>
+                        </div>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-section bio-section">
+                        <div class="info-details">
+                            <span class="info-primary">@face.GenderValue, @((int)face.AgeValue)y</span>
+                            <span class="info-secondary bio-confidence">@(face.GenderConfidence.ToString("P0"))</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="frame-border" style="border-color: @face.Color"></div>
             </div>
-            <div class="emotion-icon">@GetEmotionIcon(moodText)</div>
-        </div>
+        }
     </div>
 </div>
 
 <style>
-    .relative {
-        position: relative;
-        width: 640px;
-        height: 480px;
+    .camera-container {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    overflow: hidden;
     }
 
-    .emotion-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        transition: all 0.3s ease;
+    .face-tracking-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
     }
 
     .face-frame {
-        position: absolute;
-        border: 3px solid;
-        border-radius: 8px;
-        transition: all 0.3s ease;
+    position: absolute;
+    transform-origin: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .emotion-indicator {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.7);
-        padding: 10px 20px;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+    .frame-border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 3px solid;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     }
 
-    .emotion-text {
-        text-align: center;
+    .face-info-box {
+    position: absolute;
+    top: -70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    padding: 8px;
+    border-radius: 15px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    z-index: 10;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
     }
 
-    .emotion-label {
-        font-size: 24px;
-        font-weight: bold;
+    .info-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    }
+
+    .info-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 4px;
+    }
+
+    .emotion-section {
+    flex: 1;
+    }
+
+    .bio-section {
+    flex: 1;
+    }
+
+    .emotion-emoji {
+    font-size: 24px;
+    line-height: 1;
+    }
+
+    .info-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    }
+
+    .info-primary {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 1.2;
+    }
+
+    .info-secondary {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    line-height: 1;
+    }
+
+    .bio-confidence {
+    font-size: 10px;
+    opacity: 0.7;
+    }
+
+    .camera-container {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    overflow: hidden;
+    }
+
+    .face-tracking-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    }
+
+    .face-frame {
+    position: absolute;
+    transform-origin: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .frame-border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 3px solid;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .emotion-info-box {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    padding: 8px 16px;
+    border-radius: 15px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    z-index: 10;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    }
+
+    .emotion-emoji {
+    font-size: 24px;
+    line-height: 1;
+    }
+
+    .emotion-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    }
+
+    .emotion-name {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 1.2;
     }
 
     .emotion-confidence {
-        font-size: 14px;
-        opacity: 0.8;
-    }
-
-    .emotion-icon {
-        font-size: 32px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    line-height: 1;
     }
 
     /* Emotion-specific styles */
-    .emotion-happy {
-        background: linear-gradient(rgba(76, 175, 80, 0.1), transparent);
+    .face-frame.happy .frame-border {
+    border-color: #FFD700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
     }
 
-    .emotion-sad {
-        background: linear-gradient(rgba(33, 150, 243, 0.1), transparent);
+    .face-frame.sad .frame-border {
+    border-color: #4169E1;
+    box-shadow: 0 0 20px rgba(65, 105, 225, 0.3);
     }
 
-    .emotion-angry {
-        background: linear-gradient(rgba(244, 67, 54, 0.1), transparent);
+    .face-frame.angry .frame-border {
+    border-color: #FF4500;
+    box-shadow: 0 0 20px rgba(255, 69, 0, 0.3);
     }
 
-    .emotion-neutral {
-        background: linear-gradient(rgba(158, 158, 158, 0.1), transparent);
+    .face-frame.fear .frame-border {
+    border-color: #9932CC;
+    box-shadow: 0 0 20px rgba(153, 50, 204, 0.3);
+    }
+
+    .face-frame.surprise .frame-border {
+    border-color: #FF8C00;
+    box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
+    }
+
+    .face-frame.disgust .frame-border {
+    border-color: #32CD32;
+    box-shadow: 0 0 20px rgba(50, 205, 50, 0.3);
+    }
+
+    .face-frame.neutral .frame-border {
+    border-color: #A9A9A9;
+    box-shadow: 0 0 20px rgba(169, 169, 169, 0.3);
     }
 </style>
 
 @code {
     private CameraStreamer CameraStreamerReference;
     private string cameraId = null;
-    private string trackingStyle = "display: none;";
-    private string moodText = "Neutral";
-    private string coordinateText = "";
-    private string htmlColor = "grey";
-    private string colorStyle = "";
-    private string emotionClass = "emotion-neutral";
-    private string containerStyle = "";
-    private float confidence = 0;
-
+    private List<TrackedFace> trackedFaces = new();
     private EmotionDetectionService _emotionService;
+    private AgePredictionService _ageService;
+    private GenderPredictionService _genderService;
+    private ConcurrentQueue<(string Id, byte[] Image, Rectangle Face)> emotionQueue = new();
+    private ConcurrentQueue<(string Id, byte[] Image, Rectangle Face)> ageQueue = new();
+    private ConcurrentQueue<(string Id, byte[] Image, Rectangle Face)> genderQueue = new();
+
+    // Flags to control processing state
+    private bool isProcessingEmotion = false;
+    private bool isProcessingAge = false;
+    private bool isProcessingGender = false;
 
     protected override void OnInitialized()
     {
-        _emotionService = new EmotionDetectionService("onnx_model.onnx");
+        _emotionService = new EmotionDetectionService("enet_b0_8_best_afew.onnx");
+        _ageService = new AgePredictionService("age_googlenet.onnx");
+        _genderService = new GenderPredictionService("gender_googlenet.onnx");
         base.OnInitialized();
     }
 
+    private class TrackedFace
+    {
+        // Core tracking properties
+        public string Id { get; set; }
+        public double CenterX { get; set; }
+        public double CenterY { get; set; }
+        public DateTime LastSeen { get; set; }
+        public string TrackingStyle { get; set; }
+
+        // Independently updated properties with timestamps
+        public EmotionData Emotion { get; set; } = new();
+        public AgeData Age { get; set; } = new();
+        public GenderData Gender { get; set; } = new();
+
+        public float Confidence => Emotion.Confidence;
+        public string MoodText => Emotion.MoodText;
+        public string Color => Emotion.Color;
+        public string ColorSecondary => Emotion.ColorSecondary;
+        public string EmotionClass => Emotion.EmotionClass;
+        public float AgeValue => Age.Age;
+        public string GenderValue => Gender.Gender;
+        public float GenderConfidence => Gender.Confidence;
+
+        public class EmotionData
+        {
+            public string MoodText { get; set; } = "neutral";
+            public string Color { get; set; } = "#A9A9A9";
+            public string ColorSecondary { get; set; } = "#D3D3D3";
+            public string EmotionClass { get; set; } = "neutral";
+            public float Confidence { get; set; } = 0;
+            public DateTime LastUpdated { get; set; } = DateTime.MinValue;
+        }
+
+        public class AgeData
+        {
+            public float Age { get; set; } = 0;
+            public DateTime LastUpdated { get; set; } = DateTime.MinValue;
+        }
+
+        public class GenderData
+        {
+            public string Gender { get; set; } = "Unknown";
+            public float Confidence { get; set; } = 0;
+            public DateTime LastUpdated { get; set; } = DateTime.MinValue;
+        }
+    }
     private async void OnRenderedHandler()
     {
         if (await CameraStreamerReference.GetCameraAccessAsync())
@@ -128,74 +344,245 @@
         }
     }
 
+    private async void Start()
+    {
+        await CameraStreamerReference.StartAsync();
+    }
+
+    private async void Stop()
+    {
+        await CameraStreamerReference.StopAsync();
+    }
     private async void OnFrameHandler(string data)
     {
         data = data[(data.IndexOf(',') + 1)..];
         byte[] byteArray = System.Convert.FromBase64String(data);
 
-        var faces = FaceOffService.CameraImageFeed(byteArray);
+        // Only detect faces and update positions every frame
+        var enhancedFaces = FaceOffService.DetectFaces(byteArray);
+        var newTrackedFaces = new List<TrackedFace>();
 
-        foreach (var face in faces)
+        foreach (var face in enhancedFaces)
         {
-            coordinateText = $"{(int)face.X} {(int)face.Y}";
-            TrackImage((int)(face.X + face.X / 4), (int)(face.Y + face.Y / 4), (int)(face.Width + 10), (int)(face.Height + 10));
+            double centerX = face.X + (face.Width / 2);
+            double centerY = face.Y + (face.Height / 2);
 
-            // Detect emotion for each face
-            var emotionResult = await _emotionService.DetectEmotion(face, byteArray);
-            UpdateEmotionDisplay(emotionResult.Emotion, emotionResult.Confidence);
+            var closestFace = trackedFaces
+                .OrderBy(t => CalculateDistance(t.CenterX, t.CenterY, centerX, centerY))
+                .FirstOrDefault();
+
+            TrackedFace trackedFace;
+
+            if (closestFace != null && CalculateDistance(closestFace.CenterX, closestFace.CenterY, centerX, centerY) < 50)
+            {
+                trackedFace = closestFace;
+                trackedFace.TrackingStyle = $"left: {face.X}px; top: {face.Y}px; width: {face.Width}px; height: {face.Height}px;";
+            }
+            else
+            {
+                trackedFace = new TrackedFace
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        TrackingStyle = $"left: {face.X}px; top: {face.Y}px; width: {face.Width}px; height: {face.Height}px;"
+                    };
+            }
+
+            trackedFace.CenterX = centerX;
+            trackedFace.CenterY = centerY;
+            trackedFace.LastSeen = DateTime.Now;
+
+            // Queue detection tasks if needed
+            QueueDetectionTasks(trackedFace, face, byteArray);
+
+            newTrackedFaces.Add(trackedFace);
         }
 
-        if (!faces.Any())
+        trackedFaces = newTrackedFaces;
+        StateHasChanged();
+
+        // Start processing queues if not already running
+        ProcessQueues();
+    }
+    private byte[] CropFace(byte[] image, Rectangle face)
+    {
+        using var img = Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(image);
+
+        var faceIntRect = new Rectangle((int)face.X, (int)face.Y, (int)face.Width, (int)face.Height);
+
+        img.Mutate(ctx => ctx.Crop(faceIntRect));  
+
+        using var ms = new MemoryStream();
+        img.SaveAsJpeg(ms); 
+        return ms.ToArray();
+    }
+
+
+
+    private void QueueDetectionTasks(TrackedFace face, DetectedFace detectedFace, byte[] image)
+    {
+        var faceRect = new Rectangle((int)detectedFace.X, (int)detectedFace.Y, (int)detectedFace.Width, (int)detectedFace.Height);
+
+        if ((DateTime.Now - face.Emotion.LastUpdated).TotalMilliseconds > 100)
         {
-            // Reset display when no faces detected
-            ResetEmotionDisplay();
+            emotionQueue.Enqueue((face.Id, image, faceRect));
+        }
+
+        if ((DateTime.Now - face.Age.LastUpdated).TotalMilliseconds > 500)
+        {
+            ageQueue.Enqueue((face.Id, image, faceRect));
+        }
+
+        if ((DateTime.Now - face.Gender.LastUpdated).TotalMilliseconds > 1000)
+        {
+            genderQueue.Enqueue((face.Id, image, faceRect));
         }
     }
 
-    private void TrackImage(int x, int y, int width, int height)
+    private void ProcessQueues()
     {
-        trackingStyle = $"display: block; left: {x}px; top: {y}px; width: {width}px; height: {height}px;";
+        Task.Run(() => ProcessEmotionQueue());
+        Task.Run(() => ProcessAgeQueue());
+        Task.Run(() => ProcessGenderQueue());
     }
 
-    private void UpdateEmotionDisplay(string emotion, float confidenceValue)
-    {
-        confidence = confidenceValue;
-        moodText = char.ToUpper(emotion[0]) + emotion.Substring(1);
 
-        switch (emotion.ToLower())
+    private async Task ProcessEmotionQueue()
+    {
+        isProcessingEmotion = true;
+        while (emotionQueue.TryDequeue(out var item))
         {
-            case "happy":
-                htmlColor = "#4CAF50";
-                emotionClass = "emotion-happy";
-                colorStyle = "border-color: #4CAF50";
-                break;
-            case "sad":
-                htmlColor = "#2196F3";
-                emotionClass = "emotion-sad";
-                colorStyle = "border-color: #2196F3";
-                break;
-            case "angry":
-                htmlColor = "#F44336";
-                emotionClass = "emotion-angry";
-                colorStyle = "border-color: #F44336";
-                break;
-            default:
-                htmlColor = "#9E9E9E";
-                emotionClass = "emotion-neutral";
-                colorStyle = "border-color: #9E9E9E";
-                break;
+            var (id, image, face) = item;
+
+            var trackedFace = trackedFaces.FirstOrDefault(f => f.Id == id);
+            if (trackedFace != null)
+            {
+                var detectedFace = new DetectedFace
+                    {
+                        X = face.X,
+                        Y = face.Y,
+                        Width = face.Width,
+                        Height = face.Height
+                    };
+                var emotionResult = await _emotionService.DetectEmotion(detectedFace, image);
+                var (color, colorSecondary, emotionClass) = GetEmotionStyle(emotionResult.Emotion);
+
+                trackedFace.Emotion.MoodText = char.ToUpper(emotionResult.Emotion[0]) + emotionResult.Emotion[1..];
+                trackedFace.Emotion.Color = color;
+                trackedFace.Emotion.ColorSecondary = colorSecondary;
+                trackedFace.Emotion.EmotionClass = emotionClass;
+                trackedFace.Emotion.Confidence = emotionResult.Confidence;
+                trackedFace.Emotion.LastUpdated = DateTime.Now;
+
+                StateHasChanged();
+            }
         }
+        isProcessingEmotion = false;
     }
 
-    private void ResetEmotionDisplay()
+    private double CalculateDistance(double x1, double y1, double x2, double y2)
     {
-        trackingStyle = "display: none;";
-        moodText = "Neutral";
-        htmlColor = "#9E9E9E";
-        emotionClass = "emotion-neutral";
-        colorStyle = "border-color: #9E9E9E";
-        confidence = 0;
+        return Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2));
     }
+   
+
+    private float SmoothValue(float oldValue, float newValue, float smoothingFactor)
+    {
+        return (oldValue * (1 - smoothingFactor)) + (newValue * smoothingFactor);
+    }
+    private TrackedFace CreateTrackedFace(EnhancedFaceDetection enhancedFace, EmotionResult emotion)
+    {
+        var x = (int)enhancedFace.Face.X;
+        var y = (int)enhancedFace.Face.Y;
+        var width = (int)enhancedFace.Face.Width;
+        var height = (int)enhancedFace.Face.Height;
+
+        var trackedFace = new TrackedFace
+            {
+                Id = Guid.NewGuid().ToString(),
+                TrackingStyle = $"left: {x}px; top: {y}px; width: {width}px; height: {height}px;",
+                CenterX = x + (width / 2),
+                CenterY = y + (height / 2),
+                LastSeen = DateTime.Now
+            };
+
+        // Initialize the emotion data
+        var (color, colorSecondary, emotionClass) = GetEmotionStyle(emotion.Emotion);
+        trackedFace.Emotion = new TrackedFace.EmotionData
+            {
+                MoodText = char.ToUpper(emotion.Emotion[0]) + emotion.Emotion[1..],
+                Color = color,
+                ColorSecondary = colorSecondary,
+                EmotionClass = emotionClass,
+                Confidence = emotion.Confidence,
+                LastUpdated = DateTime.Now
+            };
+
+        // Initialize age data
+        trackedFace.Age = new TrackedFace.AgeData
+            {
+                Age = enhancedFace.AgePrediction?.Age ?? 0,
+                LastUpdated = DateTime.Now
+            };
+
+        // Initialize gender data
+        trackedFace.Gender = new TrackedFace.GenderData
+            {
+                Gender = enhancedFace.GenderPrediction?.Gender ?? "Unknown",
+                Confidence = enhancedFace.GenderPrediction?.Confidence ?? 0,
+                LastUpdated = DateTime.Now
+            };
+
+        return trackedFace;
+    }
+    private async Task ProcessAgeQueue()
+    {
+        isProcessingAge = true;
+        while (ageQueue.TryDequeue(out var item))
+        {
+            var (id, image, face) = item;
+            var trackedFace = trackedFaces.FirstOrDefault(f => f.Id == id);
+            if (trackedFace != null)
+            {
+                var croppedFace = CropFace(image, face);
+                var agePrediction = await _ageService.PredictAgeAsync(croppedFace);
+                trackedFace.Age.Age = SmoothValue(trackedFace.Age.Age, agePrediction.Age, 0.3f);
+                trackedFace.Age.LastUpdated = DateTime.Now;
+                StateHasChanged();
+            }
+        }
+        isProcessingAge = false;
+    }
+
+    private async Task ProcessGenderQueue()
+    {
+        isProcessingGender = true;
+        while (genderQueue.TryDequeue(out var item))
+        {
+            var (id, image, face) = item;
+            var trackedFace = trackedFaces.FirstOrDefault(f => f.Id == id);
+            if (trackedFace != null)
+            {
+                var croppedFace = CropFace(image, face);
+                var genderPrediction = await _genderService.PredictGenderAsync(croppedFace);
+                trackedFace.Gender.Gender = genderPrediction.Gender;
+                trackedFace.Gender.Confidence = genderPrediction.Confidence;
+                trackedFace.Gender.LastUpdated = DateTime.Now;
+                StateHasChanged();
+            }
+        }
+        isProcessingGender = false;
+    }
+
+    private (string color, string colorSecondary, string className) GetEmotionStyle(string emotion) => emotion.ToLower() switch
+    {
+        "happy" => ("#FFD700", "#FFA500", "happy"),          // Gold to Orange
+        "sad" => ("#4169E1", "#1E90FF", "sad"),             // Royal Blue to Dodger Blue
+        "angry" => ("#FF4500", "#FF6347", "angry"),         // Orange Red to Tomato
+        "fear" => ("#9932CC", "#BA55D3", "fear"),           // Dark Orchid to Medium Orchid
+        "surprise" => ("#FF8C00", "#FFA500", "surprise"),   // Dark Orange to Orange
+        "disgust" => ("#32CD32", "#90EE90", "disgust"),     // Lime Green to Light Green
+        _ => ("#A9A9A9", "#D3D3D3", "neutral")              // Dark Gray to Light Gray
+    };
 
     private string GetEmotionIcon(string emotion) => emotion.ToLower() switch
     {
@@ -211,5 +598,7 @@
     public void Dispose()
     {
         _emotionService?.Dispose();
+        _ageService?.Dispose();
+        _genderService?.Dispose();
     }
 }
